@@ -56,28 +56,32 @@ input[type="checkbox"]:checked{
   accent-color: #6157A0;
 }
 input:focus{
-  outline: none !important;
+  outline: none;
 }
 
 input[type="text"]:hover{
-  border: 1px solid#000;
+  outline: 1px solid#000;
 }
+/* input[type="password"]:hover{
+  border: 1px solid#000;
+} */
+
 input[type="text"]:focus{
-  border: 2px solid#1976D2;
+  outline: 2px solid#1976D2;
 }
 
 input[type="email"]:hover{
-  border: 1px solid#000;
+  outline: 1px solid#000;
 }
 input[type="email"]:focus{
-  border: 2px solid#1976D2;
+  outline: 2px solid#1976D2;
 }
 
 input[type="search"]:hover{
-  border: 1px solid#000;
+  outline: 1px solid#000;
 }
 input[type="search"]:focus{
-  border: 2px solid#1976D2;
+  outline: 2px solid#1976D2;
 }
 
 /* #layout{
