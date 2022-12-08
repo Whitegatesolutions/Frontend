@@ -39,6 +39,21 @@ export const ListOfBusinessesCollectionsForNewRegistration : Array<BusinessesGri
     }
 ];
 
+export const DaysArray : number[] = new Array<number>(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31);
+export const MonthsArray : string[] = new Array<string>("January","February","March","April","May","June","July","August","September","October","November","December");
+//export const YearsArray : number[] = new Array<number>(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31);
+
+export const yearsArray = () : number[] => {
+    const years : number[] = [];
+    for(let i = 1950; i < 2025; i++){
+        years.push(i);
+    }
+    return years;
+}
+
+export const Years : number[] = yearsArray();
+
+
 export const businessRegObjInstance :BusinessRegParticularsInterface ={
     id : 0,
     firstName : "",

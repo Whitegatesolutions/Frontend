@@ -8,7 +8,7 @@ import Select from '@mui/material/Select';
 import React from 'react';
 import { InputLabel } from '@mui/material';
 import { BusinessRegParticularsInterface } from '../../../utils/constants';
-import { businessRegObjInstance } from '../../../utils/collections';
+import { businessRegObjInstance, DaysArray, MonthsArray, Years } from '../../../utils/collections';
 
 export const BusinessRegistrationParticularsForm = () : JSX.Element => {
     const [age, setAge] = React.useState('');
@@ -75,8 +75,14 @@ export const BusinessRegistrationParticularsForm = () : JSX.Element => {
                          <div className='w-full flex flex-col md:flex-row gap-4 text-xs text-black'>
                             <div className='flex flex-col md:w-1/3 w-full'>
                                 <p className='font-bold'>State</p>
-                                <FormControl sx={{width:'100'}} size="small">
-                                    {/* <InputLabel id="demo-select-small" sx={{color : '#000'}}>Select State</InputLabel> */}
+                                <select name="day" className='w-full border border-[#CBCBCB] py-2 px-3 rounded-md'>
+                                    <option value="state">Select State</option>
+                                    {/* {DaysArray.map((day : number, i:number) => 
+                                    <option value={day} key={i}>{day < 10 ? `0${day}` : day}</option>
+                                    )} */}
+                                </select>
+                                {/* <FormControl sx={{width:'100'}} size="small">
+                                    <InputLabel id="demo-select-small" sx={{color : '#000'}}>Select State</InputLabel>
                                     <Select
                                         labelId="demo-select-small"
                                         id="demo-select-small"
@@ -88,12 +94,18 @@ export const BusinessRegistrationParticularsForm = () : JSX.Element => {
                                         </MenuItem>
                                     </Select>
                                 
-                                </FormControl>
+                                </FormControl> */}
                             </div>
                     
                              <div className='flex flex-col md:w-1/3 w-full'>
                                  <p className='font-bold'>LGA</p>
-                                    <FormControl sx={{width:'100%'}} size="small">
+                                 <select name="day" className='w-full border border-[#CBCBCB] py-2 px-3 rounded-md'>
+                                    <option value="LGA">Select LGA</option>
+                                    {/* {DaysArray.map((day : number, i:number) => 
+                                    <option value={day} key={i}>{day < 10 ? `0${day}` : day}</option>
+                                    )} */}
+                                </select>
+                                    {/* <FormControl sx={{width:'100%'}} size="small">
                                      <Select
                                          labelId="demo-select-small"
                                          id="demo-select-small"
@@ -101,11 +113,11 @@ export const BusinessRegistrationParticularsForm = () : JSX.Element => {
                                          //onChange={handleChange}
                                      >
                                          <MenuItem value="">
-                                         <em>None</em>
+                                          {/* <em>select LGA</em>
                                          </MenuItem>
                                      </Select>
                                  
-                                 </FormControl>
+                                 </FormControl> */}
                              </div>
                              <div className='flex flex-col md:w-1/3 w-full'>
                                  <p className='font-bold'>City</p>
@@ -128,7 +140,26 @@ export const BusinessRegistrationParticularsForm = () : JSX.Element => {
                     
                              <div className='flex flex-col md:w-1/3 w-full'>
                                  <p className='font-bold'>Date&nbsp;Of&nbsp;Birth</p>
-                                 <input type="text" className='text-sm py-2 px-4 rounded-md border border-[#CBCBCB] w-full'/>
+                                 <div className='w-full flex flex-row items-center gap-2 text-[#303030]'>
+                                     <select name="day" className='w-1/3 border border-[#CBCBCB] py-2 px-3 rounded-md'>
+                                        <option value="day">Day</option>
+                                        {DaysArray.map((day : number, i:number) => 
+                                        <option value={day} key={i}>{day < 10 ? `0${day}` : day}</option>
+                                        )}
+                                     </select>
+                                     <select name="month" className='w-1/3 border border-[#CBCBCB] py-2 px-3 rounded-md'>
+                                        <option value="month">Month</option>
+                                        {MonthsArray.map((month : string, i:number) => 
+                                        <option value={month.substring(0,3)} key={i}>{month}</option>
+                                        )}
+                                     </select>
+                                     <select name="year" className='w-1/3 border border-[#CBCBCB] py-2 px-3 rounded-md'>
+                                        <option value="year">Year</option>
+                                        {Years.map((year : number, i:number) => 
+                                        <option value={year} key={i}>{year}</option>
+                                        )}
+                                     </select>
+                                 </div>
                              </div>
                              <div className='flex flex-col md:w-1/3 w-full'>
                                  <p className='font-bold'>E-mail&nbsp;Address</p>

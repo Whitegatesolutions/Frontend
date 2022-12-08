@@ -55,33 +55,48 @@ a {
 input[type="checkbox"]:checked{
   accent-color: #6157A0;
 }
+
+select:focus{
+  outline: none !important;
+}
+
+select:hover{
+  border: 1px solid#000;
+}
+
+select::marker{
+ /* color: #CBCBCB; */
+ width: 12px;
+ 
+}
+
 input:focus{
-  outline: none;
+  outline: none !important;
 }
 
 input[type="text"]:hover{
-  outline: 1px solid#000;
+  border: 1px solid#000;
 }
 /* input[type="password"]:hover{
   border: 1px solid#000;
 } */
 
 input[type="text"]:focus{
-  outline: 2px solid#1976D2;
+  border: 1px solid#1976D2;
 }
 
 input[type="email"]:hover{
-  outline: 1px solid#000;
+  border: 1px solid#000;
 }
 input[type="email"]:focus{
-  outline: 2px solid#1976D2;
+  border: 1px solid#1976D2;
 }
 
 input[type="search"]:hover{
-  outline: 1px solid#000;
+  border: 1px solid#000;
 }
 input[type="search"]:focus{
-  outline: 2px solid#1976D2;
+  border: 1px solid#1976D2;
 }
 
 /* #layout{
