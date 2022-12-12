@@ -173,3 +173,25 @@ input[type="search"]:focus{
   
   background: #afb4b4; 
 }  */
+
+#sideNav {
+  height: 100%;
+  width: 0;
+  position: fixed;
+  z-index: 1;
+  top: 6rem;
+  left: 0;
+  background-color: #6157A0;
+  color : white;
+  overflow-x: hidden;
+  transition: 0.5s;
+  /* padding-top: 60px; bg-[#6157A0] */
+}
+#backdrop{
+  position: fixed;
+  z-index: 10;
+  background-color: rgba(0,0,0,0.1);
+  height: 100vh;
+  top: 6rem;
+  left: 0;
+}

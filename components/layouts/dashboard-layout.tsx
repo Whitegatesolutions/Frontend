@@ -4,7 +4,7 @@ import ControlPointRoundedIcon from '@mui/icons-material/ControlPointRounded';
 import BusinessCenterOutlinedIcon from '@mui/icons-material/BusinessCenterOutlined';
 import { NextRouter, useRouter } from 'next/router';
 import { TailwindCssStyles } from '../../utils/tailwindStyles';
-import { DashboardTopBar } from './dashboard-top-bar';
+import { DashboardTopBar, ResponsiveSideBar } from './dashboard-top-bar';
 import { SidebarElementValuesObject } from '../../utils/constants';
 import { SideBarNavigation } from './dashboard-sidebar';
 
@@ -45,7 +45,10 @@ const DashboardLayout : FC<Props> = ({children}) => {
                 <SideBarNavigation values={UserSideNavigationValues}/>
                 <main className='flex-1 bg-white'>
                     <DashboardTopBar pageTitle='New Registration'/>
-                    {children}
+                    <div className='w-full h-auto'>
+                        {children}
+                        <ResponsiveSideBar values={UserSideNavigationValues}/>
+                    </div>
                 </main>
             </div>
         </Fragment>
