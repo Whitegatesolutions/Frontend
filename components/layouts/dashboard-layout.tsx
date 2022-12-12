@@ -10,7 +10,7 @@ import { SideBarNavigation } from './dashboard-sidebar';
 
 
 
-const UserSideNavigationValues : SidebarElementValuesObject = {
+export const UserSideNavigationValues : SidebarElementValuesObject = {
     firstName : 'Oluwadamilola',
     lastName : 'Adeyemi',
     image : '/static-img.png',
@@ -47,7 +47,6 @@ const DashboardLayout : FC<Props> = ({children}) => {
                     <DashboardTopBar pageTitle='New Registration'/>
                     <div className='w-full h-auto'>
                         {children}
-                        <ResponsiveSideBar values={UserSideNavigationValues}/>
                     </div>
                 </main>
             </div>

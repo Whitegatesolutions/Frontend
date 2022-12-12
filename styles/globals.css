@@ -179,7 +179,7 @@ input[type="search"]:focus{
   width: 0;
   position: fixed;
   z-index: 1;
-  top: 6rem;
+  top: 5rem;
   left: 0;
   background-color: #6157A0;
   color : white;
@@ -192,6 +192,6 @@ input[type="search"]:focus{
   z-index: 10;
   background-color: rgba(0,0,0,0.1);
   height: 100vh;
-  top: 6rem;
+  top: 5rem;
   left: 0;
 }

@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 import DragHandleRoundedIcon from '@mui/icons-material/DragHandleRounded';
 import {useState, useEffect} from 'react';
 import { SidebarElementValuesObject } from '../../utils/constants';
+import { UserSideNavigationValues } from './dashboard-layout';
 
 
 const useStyles = makeStyles((theme : any) => ({
@@ -36,7 +37,7 @@ const openSideBar = () => {
     const doc = document.getElementById('sideNav')
     const doc1 = document.getElementById('backdrop')
     if(doc !== null && doc1 !== null){
-        doc.style.width = "50%"
+        doc.style.width = "75%"
         doc1.style.width = "100%"
     }
 }
@@ -171,7 +172,7 @@ export const DashboardTopBar :FC<Props> = ({pageTitle, showControls = true}) => 
             </div>
         </header>
         {/* <hr/> */}
-        {/* <ResponsiveSideBar/> */}
+        <ResponsiveSideBar values={UserSideNavigationValues}/>
     </>
     );
 }
