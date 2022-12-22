@@ -16,3 +16,4 @@ export function validatePassword(password : string) : boolean{
 	var exp = new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#?,()\:\;\$%\^&\*\.])(?=.{8,})");
 	return exp.test(password);
 }
+

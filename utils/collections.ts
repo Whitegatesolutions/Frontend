@@ -1,4 +1,4 @@
-import { BusinessesGridInterface, BusinessRegParticularsInterface, SidebarElementValuesObject } from "./constants";
+import { BusinessesGridInterface, BusinessRegParticularsInterface, CooperateRegParticularsInterface, SidebarElementValuesObject } from "./constants";
 
 export const ListOfBusinessesCollectionsForNewRegistration : Array<BusinessesGridInterface> = [
     {
@@ -65,7 +65,30 @@ export const businessRegObjInstance :BusinessRegParticularsInterface ={
     city : "",
     occupation : "",
     nationality : "",
-    dob : "",
+    day : "",
+    month : "",
+    year : "",
+    email : "",
+    telephoneNumber : "",
+    signature : "",
+    passport : "",
+    meansOfId : "",
+    certificate : ""
+}
+
+export const cooperateFormObj : Partial<BusinessRegParticularsInterface> |  CooperateRegParticularsInterface  = {
+    companyName : "",
+    rcNumber : "",
+    directorName : "",
+    residentialAddress : "",
+    state : "",
+    lga : "",
+    city : "",
+    occupation : "",
+    nationality : "",
+    day : "",
+    month : "",
+    year : "",
     email : "",
     telephoneNumber : "",
     signature : "",

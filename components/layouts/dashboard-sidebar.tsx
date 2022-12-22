@@ -3,12 +3,16 @@ import React, {FC} from 'react';
 import { SidebarElementValuesObject } from '../../utils/constants';
 import { useRouter, NextRouter } from 'next/router';
 import { TailwindCssStyles } from '../../utils/tailwindStyles';
+import {useSelector} from 'react-redux';
 
 
 type Props={
-    values : SidebarElementValuesObject
+    values : SidebarElementValuesObject,
+    firstName : string,
+    lastName : string,
+    image : string
 }
-export const SideBarNavigation :FC<Props> = ({values : {firstName,lastName,image,body}}) : JSX.Element => {
+export const SideBarNavigation :FC<Props> = ({values : {body}, firstName, lastName,image}) : JSX.Element => {
 
     const router : NextRouter = useRouter();
 
@@ -24,7 +28,7 @@ export const SideBarNavigation :FC<Props> = ({values : {firstName,lastName,image
                             }}/>
                         </div>
 
-                        <div className='text-center my-4 text-lg font-semibold'>
+                        <div className='text-center my-4 text-lg font-semibold capitalize'>
                             <p>{firstName}</p>
                             <p>{lastName}</p>
                         </div>

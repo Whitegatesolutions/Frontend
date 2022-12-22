@@ -83,12 +83,16 @@ export const SignUpOtpComponent = () : JSX.Element => {
                 localStorage.setItem('message', "You have successfully created and verified your account");
                 setAxiosResponse({...axiosResponse, msg : message, isError : false});
                 setTimeout(() => {
-                    router.push('/view-status');
+                    router.push('/new-registration');
                 },2000);
             }
         }).catch((error : AxiosError) => {
             setLoaderState(false);
             if(error?.isAxiosError){
+                if(!error?.response?.data){
+                    alert(error.message);
+                    return;
+                }
                 const {data : {success, code, message}} = error.response as any;
                 if(!success && code !== 200){
                    // alert(message);

@@ -11,6 +11,7 @@ import DragHandleRoundedIcon from '@mui/icons-material/DragHandleRounded';
 import {useState, useEffect} from 'react';
 import { SidebarElementValuesObject } from '../../utils/constants';
 import { UserSideNavigationValues } from './dashboard-layout';
+import { useSelector } from 'react-redux';
 
 
 const useStyles = makeStyles((theme : any) => ({
@@ -23,6 +24,11 @@ const useStyles = makeStyles((theme : any) => ({
 type Props={
     pageTitle : string;
     showControls ?: boolean;
+    user : {
+        firstName : string,
+        lastName : string,
+        image : string
+    }
 }
 const closeSideBar = () => {
     const doc = document.getElementById('sideNav')
@@ -43,11 +49,15 @@ const openSideBar = () => {
 }
 
 type Props1={
-    values : SidebarElementValuesObject
+    values : SidebarElementValuesObject,
+    firstName : string,
+    lastName : string,
+    image : string
 }
 
-export const ResponsiveSideBar : FC<Props1> = ({values : {firstName,lastName,image,body}}) :JSX.Element => {
+export const ResponsiveSideBar : FC<Props1> = ({values : {body}, firstName, lastName, image}) :JSX.Element => {
     const router : NextRouter = useRouter();
+
     return(
         <div id="backdrop" className='lg:hidden' onClick={closeSideBar}>
             <div id="sideNav">
@@ -59,7 +69,7 @@ export const ResponsiveSideBar : FC<Props1> = ({values : {firstName,lastName,ima
                     }}/>
                 </div>
 
-                <div className='text-center my-4 text-lg font-semibold'>
+                <div className='text-center my-4 text-lg font-semibold capitalize'>
                     <p>{firstName}</p>
                     <p>{lastName}</p>
                 </div>
@@ -89,7 +99,7 @@ export const ResponsiveSideBar : FC<Props1> = ({values : {firstName,lastName,ima
         </div>
     );
 }
-export const DashboardTopBar :FC<Props> = ({pageTitle, showControls = true}) => {
+export const DashboardTopBar :FC<Props> = ({pageTitle, showControls = true, user}) => {
     const router : NextRouter = useRouter();
     const styles = useStyles();
 
@@ -131,7 +141,7 @@ export const DashboardTopBar :FC<Props> = ({pageTitle, showControls = true}) => 
                     {showControls && 
                         <section className="flex flex-row items-center gap-1">
                             <div className='flex lg:hidden'>
-                                <Avatar src="/static-img.png"/>
+                                <Avatar src={user?.image}/>
                             </div>
                             <IconButton>
                                 <SettingsOutlinedIcon sx={{
@@ -172,7 +182,11 @@ export const DashboardTopBar :FC<Props> = ({pageTitle, showControls = true}) => 
             </div>
         </header>
         {/* <hr/> */}
-        <ResponsiveSideBar values={UserSideNavigationValues}/>
+        <ResponsiveSideBar 
+        values={UserSideNavigationValues} 
+        firstName={user?.firstName} 
+        lastName={user?.lastName} 
+        image={user?.image}/>
     </>
     );
 }

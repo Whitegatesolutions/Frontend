@@ -1,6 +1,7 @@
 export enum Constants {
     GIRL_LAWYER = "https://images.pexels.com/photos/4427622/pexels-photo-4427622.jpeg?auto=compress&cs=tinysrgb&w=1280&h=1918&dpr=1",
-    HOST_ADDRESS = "https://registreee.herokuapp.com/" ,
+    // HOST_ADDRESS = "https://registreee.herokuapp.com/" ,
+    HOST_ADDRESS = 'http://localhost:8080/',
     PASSWORD_REQUIREMENT = "Password length must be at least 8 characters, must contain upper and lowercase alphabets,special character and number"
 }
 
@@ -62,7 +63,9 @@ export interface BusinessRegParticularsInterface{
     city : string;
     occupation : string;
     nationality : string;
-    dob : string;
+    day : string;
+    month : string;
+    year : string;
     email : string;
     telephoneNumber : string;
     signature : File | string;
@@ -70,3 +73,13 @@ export interface BusinessRegParticularsInterface{
     meansOfId : File | string;
     certificate : File | string;
 }
+
+export interface CooperateRegParticularsInterface{
+    companyName : string;
+    rcNumber : string;
+    directorName : string
+}
+
+
+
+       

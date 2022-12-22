@@ -90,6 +90,10 @@ export const OTPForm = () : JSX.Element => {
         }).catch((error : AxiosError) => {
             setLoaderState(false);
             if(error?.isAxiosError){
+                if(!error?.response?.data){
+                    alert(error.message);
+                    return;
+                }
                 const {data : {success, code, message}} = error.response as any;
                 if(!success && code !== 200){
                     //alert(message);

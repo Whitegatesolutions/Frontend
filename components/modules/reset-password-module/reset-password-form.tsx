@@ -134,6 +134,10 @@ export const ResetPasswordForm = () : JSX.Element => {
         }).catch((error : AxiosError) => {
             if(error.isAxiosError){
                 setLoaderState(false);
+                if(!error?.response?.data){
+                    alert(error.message);
+                    return;
+                }
                 const {data : {success, message, code} } = error.response as any;
                 if(!success && code !== 200){
                     //alert(message);

@@ -7,7 +7,9 @@ export const postAxiosRequest = async (value : AxiosRequestInterface) => {
     return await axios.post(Constants.HOST_ADDRESS.concat(uri), body, {
         headers : {
             'Content-Type' : 'application/json'
-        }
+        },
+         timeout: 300000
+        
     });
 }
 
@@ -22,7 +24,8 @@ export const getAxiosRequest = async (uri : string) => {
     return await axios.get(Constants.HOST_ADDRESS.concat(uri), {
         headers : {
             'Content-Type' : 'application/json'
-        }
+        },
+        timeout: 300000
     });
 }
 
