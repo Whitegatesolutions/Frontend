@@ -1,4 +1,4 @@
-import React, { FC, Fragment } from 'react';
+import React, { FC, Fragment, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getAxiosRequestWithAuthorizationHeader } from '../utils/axios-requests';
 import { useDispatch, useSelector } from 'react-redux';
@@ -22,6 +22,8 @@ export default function AppProvider({ children }: Props): JSX.Element {
         }
     );
 
+    console.log('user', data);
+
     // if(stateIdSelector){
 
     //     const {data : lgaData, isFetched : isLgaDataFetched} = useQuery({
@@ -44,6 +46,8 @@ export default function AppProvider({ children }: Props): JSX.Element {
         refetchOnWindowFocus : false
     });
 
+    console.log('state', stateData);
+
     if(isStateDataFetched){
         dispatch(addStatesData(
             stateData?.data?.data
@@ -59,6 +63,10 @@ export default function AppProvider({ children }: Props): JSX.Element {
         }));
     }
 
+    useEffect(() => {},[
+        isFetched,
+        isStateDataFetched
+    ]);
     return (
         <Fragment>
             {children}

@@ -15,7 +15,7 @@ const initialState: LoginDetailsInterface = {
     password: ''
 };
 
-const initialErrorObj: ErrorInterfaceObj = {
+export const initialErrorObj: ErrorInterfaceObj = {
     msg: '',
     isError: false,
 };
