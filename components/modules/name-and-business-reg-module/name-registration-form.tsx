@@ -86,7 +86,10 @@ export const NameRegistrationFormComponent = () : JSX.Element => {
             //     email : businessNames.email,
             //     telephone : businessNames.telephone
             // });
+       }else{
+        form.classList.remove("saveForm");
        }
+
     }, [watchNameReg, 
         businessNames.secondBusinessName,
         businessNames.firstBusinessName,
@@ -119,8 +122,6 @@ export const NameRegistrationFormComponent = () : JSX.Element => {
                         {...register(`values.firstBusinessName`, { 
                             required: true,
                             onChange : (e) => {
-                                const form = document.getElementById('form-id') as HTMLFormElement;
-                                form.className = 'my-8';
                                 setBusinessNames({...businessNames, firstBusinessName : e.target.value})
                             } 
                         })}
@@ -141,8 +142,6 @@ export const NameRegistrationFormComponent = () : JSX.Element => {
                         {...register(`values.secondBusinessName`, { 
                             required: true ,
                             onChange : (e) =>{ 
-                                const form = document.getElementById('form-id') as HTMLFormElement;
-                                form.className = 'my-8';
                                 setBusinessNames({...businessNames, secondBusinessName : e.target.value})
                             },
                             validate : (value) => value !== businessNames.firstBusinessName
@@ -180,7 +179,7 @@ export const NameRegistrationFormComponent = () : JSX.Element => {
                     <div className='flex flex-col md:w-1/2 w-full'>
                         <p className='font-bold'>E-mail&nbsp;Address</p>
                         <input 
-                        type={"email"} 
+                        type="email"
                         className={
                             `text-sm py-2 px-4 rounded-md border border-[#CBCBCB] w-full 
                             ${businessNames.email && !validateEmail(businessNames.email) && 'border border-[#FF2D2D]'}`
@@ -190,8 +189,6 @@ export const NameRegistrationFormComponent = () : JSX.Element => {
                             pattern: /^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/gi,
                             validate : (value) => validateEmail(value),
                             onChange : (e) => {
-                                const form = document.getElementById('form-id') as HTMLFormElement;
-                                form.className = 'my-8';
                                 setBusinessNames({...businessNames, email : e.target.value})
                             }
                         })}/>
@@ -207,8 +204,6 @@ export const NameRegistrationFormComponent = () : JSX.Element => {
                             maxLength : 11,
                             pattern : /[0-9]{11}/,
                             onChange : (e) => {
-                                const form = document.getElementById('form-id') as HTMLFormElement;
-                                form.className = 'my-8';
                                 setBusinessNames({...businessNames, telephone : e.target.value})
                             },
                         }) }

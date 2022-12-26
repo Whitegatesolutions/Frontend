@@ -17,6 +17,7 @@ import { multipleFilePostRequest, postAxiosRequestWithHeader, postAxiosRequestWi
 import { AxiosError } from 'axios';
 import { initialErrorObj } from '../login-module/login-form';
 import { ComponentLoader } from '../componentLoader';
+import { isError } from 'react-query';
 
 const partnersObj = {
     firstName: "",
@@ -39,6 +40,12 @@ const partnersObj = {
     certificate: ""
 };
 
+const filesObj = {
+    signature : '',
+    passport : '',
+    meansOfId : '',
+    certificate : ''
+};
 
 
 export const BusinessRegistrationParticularsForm = (): JSX.Element => {
@@ -49,6 +56,8 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
     const [axiosResponse, setAxiosResponse] = React.useState<ErrorInterfaceObj>(initialErrorObj);
 
     const [requestStatus, isRequestSuccessful] = React.useState<any[]>([]);
+
+    const [files, setFiles] = React.useState([filesObj]);
 
     const [state, setState] = React.useState<any>({
         open: true,
@@ -113,31 +122,12 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
     }
 
     const getSavedForm = (index : number) =>{
-        if(requestStatus.length === 0){
-            return false;
-        }
-        requestStatus.map((i : any) => {
-            if(i !== index){
-                return false;
-            }else{
-                return true;
-            }
-        })
+        //get index of saved partners
+        return requestStatus.filter((i:number) => index === i);
     }
     const addFormOnClickHandler = () => {
-        if(!isValidBusinessForm){
-            setAxiosResponse({...axiosResponse, msg : "Fill The Business Name Registration Form Above", isError : true});
-
-            setTimeout(() => {
-                setAxiosResponse({...axiosResponse, msg : "", isError : false});
-            },4000);
-            return;
-        }
-        console.log('valid');
         append(partnersObj);
         dispatch(setIndividualFieldArrayLength(fields.length));
-
-        setAxiosResponse({...axiosResponse, msg : "", isError : false});
     }
 
     // const onChangeTextHandler = (e: any, index: number) => {
@@ -173,19 +163,12 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
 
     const emptyFileInputField = (elementId: string, index: number) => {
         setValue(`${elementId}`, '');
-
-        // const fieldName = elementId.split('-');
-
-        // const newSignatureFile = forms.map((attachment: any, i: number) => index === i
-        //     ? Object.assign(attachment, { [fieldName[0]]: '' })
-        //     : attachment);
-
-        // setNumberOfForms(newSignatureFile);
-
         document.getElementById(elementId)?.click();
     }
 
     const onSaveHandler = async (data: any, index: number) => {
+        console.log(files);
+        return
         //  if(!data.signature || 
         //     !data.passport || 
         //     !data.meanOfId || 
@@ -336,7 +319,10 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
 
     }
 
+   
     const onSubmitIndividualHandler = async (data: any) => {
+
+        return;
         console.log('data', data);
         // console.log('businessName REG', getNameRegObjectSelector);
         const { firstNameSuggestion,
@@ -521,11 +507,6 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                     type="text"
                                     className='text-sm py-2 px-4 rounded-md border border-[#CBCBCB] w-full'
                                     id={`input-${index}`}
-                                    // readOnly={
-                                    //     document.getElementById(`form-div${index}`)?.className === "saveForm"
-                                    //     ? true
-                                    //     :false
-                                    // }
                                     {...register(`values.${index}.firstName`, { required: true })}
                                 />
                             </div>
@@ -536,8 +517,6 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                     type="text"
                                     className='text-sm py-2 px-4 rounded-md border border-[#CBCBCB] w-full'
                                     id={`input-${index}`}
-                                    // name='lastName'
-                                    // onChange={(e) => onChangeTextHandler(e, index)}
                                     {...register(`values.${index}.lastName`, { required: true })}
                                 />
                             </div>
@@ -547,8 +526,6 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                     type="text"
                                     className='py-2 text-sm  px-4 rounded-md border border-[#CBCBCB] w-full'
                                     id={`input-${index}`}
-                                    // name='otherName'
-                                    // onChange={(e) => onChangeTextHandler(e, index)}
                                     {...register(`values.${index}.otherName`, { required: false })}
                                 />
                             </div>
@@ -560,8 +537,6 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                 type="text"
                                 className='py-2 text-sm px-4 rounded-md border border-[#CBCBCB] w-full'
                                 id={`input-${index}`}
-                                // name='residentialAddress'
-                                // onChange={(e) => onChangeTextHandler(e, index)}
                                 {...register(`values.${index}.residentialAddress`, { required: true })}
                             />
                         </div>
@@ -722,11 +697,10 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                     accept=".jpg,.jpeg,.png"
                                     className='hidden'
                                     id={`signature-${index}`}
-                                    // name="signature"
-                                    // onChange={(e) => onChangeFileHandler(e, index)}
                                     {...register(`values.${index}.signature`, {
-                                        required: true,
-                                    })}
+                                        required: true, 
+                                    }
+                                    )}
                                 />
                                 <div className='text-black'>{getValues(`values.${index}.signature`)[0]?.name}</div>
 
@@ -750,10 +724,10 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                 <input
                                     type="file" accept=".jpg,.jpeg,.png"
                                     className='hidden'
-                                    id={`passport-${index}`}
-                                    // name="passport"
-                                    // onChange={(e) => onChangeFileHandler(e, index)} 
-                                    {...register(`values.${index}.passport`, { required: true })} />
+                                    id={`passport-${index}`} 
+                                    {...register(`values.${index}.passport`, { 
+                                        required: true
+                                    })} />
 
                                 <p>Photograph&nbsp;Photograph:</p>
 
@@ -780,9 +754,9 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                     accept=".jpg,.jpeg,.png"
                                     className='hidden'
                                     id={`meansOfId-${index}`}
-                                    // name="meansOfId"
-                                    // onChange={(e) => onChangeFileHandler(e, index)}
-                                    {...register(`values.${index}.meansOfId`, { required: true })}
+                                    {...register(`values.${index}.meansOfId`, { 
+                                        required: true
+                                    })}
                                 />
                                 <p>Means&nbsp;Of&nbsp;Identification:</p>
                                 <div className='text-black'>{getValues(`values.${index}.meansOfId`)[0]?.name}</div>
@@ -803,15 +777,18 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                 }
                             </div>
 
-                            <div className="flex justify-between gap-2 items-center py-2 px-4 bg-[#FFFAFA] text-xs text-black font-semibold rounded">
+                            <div className="flex justify-between gap-2 
+                            items-center py-2 px-4 bg-[#FFFAFA] 
+                            text-xs text-black 
+                            font-semibold rounded">
                                 <input
                                     type="file"
                                     accept=".jpg,.jpeg,.png"
                                     className='hidden'
                                     id={`certificate-${index}`}
-                                    // name="certificate"
-                                    // onChange={(e) => onChangeFileHandler(e, index)}
-                                    {...register(`values.${index}.certificate`, { required: true })}
+                                    {...register(`values.${index}.certificate`, { 
+                                        required: true
+                                    })}
                                 />
                                 <p>Certificate&nbsp;Of&nbsp;Competence:</p>
 
@@ -834,7 +811,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                             </div>
                         </div>
                         <div className='flex justify-end text-white'>
-                            {!getSavedForm(index) ? // document.getElementById(`div-form${index}`)?.className.includes("saveForm") 
+                            {!getSavedForm(index).includes(index) ?
                                 <button
                                     id={`save-${index}-button`}
                                     // disabled={saveState ? true : false}
@@ -905,11 +882,18 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                 <section className='w-full grid md:grid-cols-2 gap-2 my-8'>
                     <div className='text-sm flex flex-col md:flex-row items-center gap-2 w-auto'>
                         <button
+                            disabled={isValidBusinessForm ? false : true}
                             onClick={() => {
                                 setExtras({ ...extras, isCooperateForm: false });
                                 addFormOnClickHandler();
                             }}
-                            className='w-full md:w-fit text-white flex justify-center gap-1 md:justify-around font-semibold mb-4 bg-[#6157A0] rounded-lg outline-none px-4 py-2'>
+                            className='w-full md:w-fit text-white 
+                            flex justify-center gap-1 md:justify-around 
+                            font-semibold mb-4 bg-[#6157A0] rounded-lg 
+                            outline-none px-4 py-2
+                            disabled:bg-[#EFF0F6] 
+                            disabled:shadow-none 
+                            disabled:text-gray-500 disabled:cursor-default'>
                             <ControlPointRoundedIcon sx={{ fontSize: '18px' }} />
                             Add&nbsp;Individual&nbsp;Business&nbsp;Owner
                         </button>
@@ -917,7 +901,16 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                             onClick={() => {
                                 addCooperateForm();
                             }}
-                            className='w-full md:w-fit text-[#6157A0] flex justify-center gap-1 md:justify-around font-semibold rounded-lg px-4 py-2 mb-4 bg-white border border-[#6157A0] outline-none'>
+                            disabled={isValidBusinessForm ? false : true}
+                            className='w-full md:w-fit text-[#6157A0] 
+                            flex justify-center gap-1 md:justify-around 
+                            font-semibold rounded-lg px-4 py-2 mb-4 
+                            bg-white border border-[#6157A0] 
+                            outline-none
+                            disabled:bg-[#EFF0F6] 
+                            disabled:shadow-none 
+                            disabled:text-gray-500 disabled:cursor-default'>
+
                             <ControlPointRoundedIcon sx={{ fontSize: '18px' }} />
                             Add&nbsp;Cooperate&nbsp;Business&nbsp;Owner
                         </button>

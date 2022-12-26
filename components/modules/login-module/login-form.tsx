@@ -118,7 +118,6 @@ export const LoginForm = (): JSX.Element => {
             })
     }
     React.useEffect(() => {
-        console.log('login details', loginDetails);
     }, [loginDetails.email, loginDetails.password]);
 
     return (

@@ -22,7 +22,7 @@ export default function AppProvider({ children }: Props): JSX.Element {
         }
     );
 
-    console.log('user', data);
+    //console.log('user', data);
 
     // if(stateIdSelector){
 
@@ -46,7 +46,7 @@ export default function AppProvider({ children }: Props): JSX.Element {
         refetchOnWindowFocus : false
     });
 
-    console.log('state', stateData);
+    //console.log('state', stateData);
 
     if(isStateDataFetched){
         dispatch(addStatesData(
