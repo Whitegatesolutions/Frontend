@@ -1,8 +1,18 @@
 import { DaysArray, MonthsArray, Years } from "../../../utils/collections";
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
-import React from "react";
 import { useForm } from "react-hook-form";
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { AnyAction, Dispatch } from "redux";
+import { addLgaData } from "../../../redux/slices/app-slice";
+import { AxiosError } from "axios";
+import { CreateBusinessNameRegPartnerType } from "../../../utils/types.utils";
+import { deleteAxiosRequest, patchAxiosRequestWithHeader, postAxiosRequestWithHeader, uploadFiles } from "../../../utils/axios-requests";
+import { ErrorInterfaceObj } from "../../../utils/constants";
+import { initialErrorObj } from "../login-module/login-form";
+import { FormActionButtons } from "../../shared-components/form-actions-button";
+import { ComponentLoader } from "../componentLoader";
 
 type Props = {
     array : any,
@@ -11,35 +21,23 @@ type Props = {
     getValues : any,
     watch : any
 }
-
-// {
-//     array,
-    // register,
-    // setValue,
-    // getValues,
-    // watch
-// }
 export const CooperateFormsComponent:React.FC<Props> = ({
     array, 
     register,
     setValue,
     getValues,
     watch} : any): JSX.Element => {
+    const dispatch = useDispatch<Dispatch<AnyAction>>();
 
-    // const { 
-    //     register,
-    //     formState :{isValid},
-    //     setError,
-    //     setValue, 
-    //     getValues, 
-    //     handleSubmit ,
-    //     watch,
-    // } = useForm<any>({
-    //     // defaultValues: {}; you can populate the fields by this attribute 
-    //    // defaultValues : partnersObj
-    // });
-    const watchAllFormFields = watch();
-
+    const [isSaving, save] = React.useState(false);
+    const [isEdit, setEdit] = React.useState(false);
+    const [isDeleting, setDeleteState] = React.useState<boolean>(false);
+    const [savedPartnerId, setPartnerId] =  React.useState<any[]>([]);
+    const [requestStatus, isRequestSuccessful] = React.useState<any[]>([]);
+    const [axiosResponse, setAxiosResponse] = React.useState<ErrorInterfaceObj>(initialErrorObj);
+    const getNameRegIdSelector = useSelector((state: any) => state.store.businessNameRegistrationId);
+    const stateSelector = useSelector((state: any) => state.store.state);
+    console.log({requestStatus});
     const emptyFileInputField = (elementId : string) => {
 
         setValue(`${elementId}`,'');
@@ -47,6 +45,209 @@ export const CooperateFormsComponent:React.FC<Props> = ({
         document.getElementById(elementId)?.click();
     }
 
+    const getSavedForm = (index : number) => {
+        //get index of saved partners
+        return requestStatus.filter((i:number) => index === i);
+    }
+
+    const uploadPartnerAttachment = async (fileList: FileList, key: string): Promise<string[]> => {
+        //const saveButton = document.getElementById(`save-${index}-button`) as HTMLButtonElement;
+        try {
+            //if(saveButton) saveButton.disabled = true;
+            const file = fileList.item(0);
+            if (file) {
+                const uploadedFileResponse = await uploadFiles([file]);
+                if (uploadedFileResponse?.success) {
+                    const [uploadedFile] = uploadedFileResponse.data;
+                    setValue(key, uploadedFile);
+                }
+                return uploadedFileResponse.data ?? [];
+            }
+            throw new Error('File was not found')
+        }
+        catch (ex : any) {
+            setAxiosResponse({...axiosResponse, msg : ex.message, isError : true});
+            setTimeout(() => {
+                setAxiosResponse({...axiosResponse, msg : '', isError : false});
+            },4000);
+            throw ex;
+        }
+    }
+
+    const onSaveHandler = async (index: number) => {
+        const saveButton = document.getElementById(`save-${index}-button`) as HTMLButtonElement;
+        const divForm = document.getElementById(`form-div${index}`) as HTMLDivElement;
+
+        const savePartnerObj: Partial<CreateBusinessNameRegPartnerType> = {
+            companyName: getValues(`cooperate.${index}.companyName`),
+            rcNumber: getValues(`cooperate.${index}.rcNumber`),
+            nameOfDirector: getValues(`cooperate.${index}.directorName`),//data?.otherName,
+            address: getValues(`cooperate.${index}.residentialAddress`),//data?.residentialAddress,
+            lgaId: '3a7e7bd2-6f7c-4945-adf3-89a1d564db08',//data?.lga,
+            city: getValues(`cooperate.${index}.city`), //data?.city,
+            dateOfBirth: new Date(`${getValues(`cooperate.${index}.year`)}/${getValues(`cooperate.${index}.month`)}/${getValues(`cooperate.${index}.day`)} GMT`),
+            occupation: getValues(`cooperate.${index}.occupation`),//data?.occupation,
+            nationality: getValues(`cooperate.${index}.nationality`),//data?.nationality,
+            email: getValues(`cooperate.${index}.email`),//data?.email,
+            phoneNumber: getValues(`cooperate.${index}.telephoneNumber`),//data?.telephoneNumber,
+            type: "CORPORATE",
+            signature: getValues(`cooperate.${index}.signature`),
+            passport: getValues(`cooperate.${index}.passport`),
+            competenceCertificate: getValues(`cooperate.${index}.certificate`),
+            idCardLink: getValues(`cooperate.${index}.meansOfId`),
+            businessNameRegistrationId: getNameRegIdSelector
+        };
+
+        if(saveButton){
+            save(true);
+           
+            console.log({savePartnerObj})
+            await postAxiosRequestWithHeader({
+                uri: 'business-name-registration-partner',
+                body: savePartnerObj,
+            }).then((res) => {
+                const { data, success, message, code } = res.data;
+                console.log('response', data);
+                save(false);
+                if (success && code === 201) {
+                    saveButton.disabled = false;
+                    divForm.className = "saveForm w-full my-4 rounded-md border border-[#CBCBCB] shadow-lg bg-white h-auto p-4";
+
+                    //console.log({key : data?.businessNameRegistration?.registeredPartnersForThsBusiness?.pop()?.id});
+                    setPartnerId(
+                        (prev) => [...prev, data.id]
+                    );
+
+                    isRequestSuccessful((prev) => [...prev, index]);
+                }
+                
+
+            })
+            .catch((err : AxiosError) => {
+                save(false);
+                if(err.isAxiosError){
+                    saveButton.disabled = false;
+                    if (!err?.response?.data) {
+                        alert(err.message);
+                        return;
+                    }
+                    if (err?.response?.data) {
+                        const { data: { success, message, code } } = err.response as any;
+                        if (!success && code !== 200) {
+                            setAxiosResponse({ ...axiosResponse, msg: message, isError: true });
+                            setTimeout(() => {
+                                setAxiosResponse({ ...axiosResponse, msg: "", isError: false });
+                            }, 4000);
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    const onClickEditButtonHandler = async(index : number) =>{
+        setEdit(true);
+        const divForm = document.getElementById(`form-div${index}`) as HTMLDivElement;
+        divForm.classList.remove("saveForm");
+    }
+    const onEditPartnerHandler = async(index : number) => {
+        const divForm = document.getElementById(`form-div${index}`) as HTMLDivElement;
+        
+
+        const savePartnerObj: Partial<CreateBusinessNameRegPartnerType> = {
+            companyName: getValues(`cooperate.${index}.companyName`),
+            rcNumber: getValues(`cooperate.${index}.rcNumber`),
+            nameOfDirector: getValues(`cooperate.${index}.directorName`),//data?.otherName,
+            address: getValues(`cooperate.${index}.residentialAddress`),//data?.residentialAddress,
+            lgaId: '3a7e7bd2-6f7c-4945-adf3-89a1d564db08',//data?.lga,
+            city: getValues(`cooperate.${index}.city`), //data?.city,
+            dateOfBirth: new Date(`${getValues(`cooperate.${index}.year`)}/${getValues(`cooperate.${index}.month`)}/${getValues(`cooperate.${index}.day`)} GMT`),
+            occupation: getValues(`cooperate.${index}.occupation`),//data?.occupation,
+            nationality: getValues(`cooperate.${index}.nationality`),//data?.nationality,
+            email: getValues(`cooperate.${index}.email`),//data?.email,
+            phoneNumber: getValues(`cooperate.${index}.telephoneNumber`),//data?.telephoneNumber,
+            type: "CORPORATE",
+            signature: getValues(`cooperate.${index}.signature`),
+            passport: getValues(`cooperate.${index}.passport`),
+            competenceCertificate: getValues(`cooperate.${index}.certificate`),
+            idCardLink: getValues(`cooperate.${index}.meansOfId`),
+            businessNamePartnerId : savedPartnerId.at(index)
+        };
+        console.log('patch',{savePartnerObj});
+
+        return;
+        save(true);
+        await patchAxiosRequestWithHeader({
+            uri: 'business-name-registration-partner',
+            body: savePartnerObj,
+        }).then((res) => {
+            const { data, success, message, code } = res.data;
+            console.log('patch', data);
+            save(false);
+            setEdit(false);
+            if (success && code === 200) {
+                divForm.className = "saveForm w-full my-4 rounded-md border border-[#CBCBCB] shadow-lg bg-white h-auto p-4";
+                //isRequestSuccessful((prev) => [...prev, index]);
+            }
+            
+
+        })
+        .catch((err : AxiosError) => {
+            save(false);
+            setEdit(false);
+            if(err.isAxiosError){
+                if (!err?.response?.data) {
+                    alert(err.message);
+                    return;
+                }
+                if (err?.response?.data) {
+                    const { data: { success, message, code } } = err.response as any;
+                    if (!success && code !== 200) {
+                        setAxiosResponse({ ...axiosResponse, msg: message, isError: true });
+                        setTimeout(() => {
+                            setAxiosResponse({ ...axiosResponse, msg: "", isError: false });
+                        }, 4000);
+                    }
+                }
+            }
+        });
+    }
+    const onDeletePartnerHandler = async (index : number) => {
+        const divForm = document.getElementById(`form-div${index}`) as HTMLDivElement;
+        setDeleteState(true);
+        const requestObj = {
+            uri : 'business-name-registration-partner',
+            body : [savedPartnerId.at(index)]
+        } 
+        await deleteAxiosRequest(requestObj)
+        .then((res) => {
+            const { data, success, message, code } = res.data;
+            console.log('response', data);
+            setDeleteState(false);
+            if (success && code === 200) {
+                divForm.style.display = 'none';
+            }
+        }).catch((err) => {
+            setDeleteState(false);
+            if(err.isAxiosError){
+                if (!err?.response?.data) {
+                    alert(err.message);
+                    return;
+                }
+                if (err?.response?.data) {
+                    const { data: { success, message, code } } = err.response as any;
+                    if (!success && code !== 200) {
+                        setAxiosResponse({ ...axiosResponse, msg: message, isError: true });
+                        setTimeout(() => {
+                            setAxiosResponse({ ...axiosResponse, msg: "", isError: false });
+                        }, 4000);
+                    }
+                }
+            }
+        });
+
+    }
+    
     const onSubmitHandler = async (e: React.SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault();
     }
@@ -54,7 +255,7 @@ export const CooperateFormsComponent:React.FC<Props> = ({
         const subscription = watch((value : any, { name, type } : any) => console.log(value, name, type));
         return () => subscription.unsubscribe();
 
-    }, [watchAllFormFields]);
+    }, [ watch]);
     return (
         <>
             {/* <form onSubmit={handleSubmit((data) =>{
@@ -62,6 +263,7 @@ export const CooperateFormsComponent:React.FC<Props> = ({
             })}> */}
                 {array && array.map((data: any, index: number) =>
                     <div
+                        id={`form-div${index}`}
                         key={index}
                         className="w-full my-4 rounded-md border border-[#CBCBCB] shadow-lg bg-white h-auto p-4">
                         <p className="text-xl font-bold py-4">Cooperate&nbsp;Business&nbsp;Owner</p>
@@ -72,7 +274,11 @@ export const CooperateFormsComponent:React.FC<Props> = ({
                                 <input 
                                 type="text" 
                                 className='text-sm py-2 px-4 rounded-md border border-[#CBCBCB] w-full'
-                                {...register(`cooperate.${index}.companyName`, {required : true})}
+                                {...register(`cooperate.${index}.companyName`, 
+                                    {
+                                        required : true,
+                                    }
+                                )}
                                 />
                             </div>
 
@@ -114,9 +320,12 @@ export const CooperateFormsComponent:React.FC<Props> = ({
                                 className='w-full border border-[#CBCBCB] py-2 px-3 rounded-md'
                                 {...register(`cooperate.${index}.state`, {required : true})}>
                                     <option value="state">Select State</option>
-                                    {/* {DaysArray.map((day : number, i:number) => 
-                                <option value={day} key={i}>{day < 10 ? `0${day}` : day}</option>
-                                )} */}
+                                    {stateSelector && stateSelector?.map((state: any, i: number) =>
+                                        <option value={state.id} key={i}
+                                            onClick={() => dispatch(addLgaData(state.lgasForThisState))}>
+                                            {state.name}
+                                        </option>
+                                    )}
                                 </select>
                             </div>
 
@@ -127,6 +336,8 @@ export const CooperateFormsComponent:React.FC<Props> = ({
                                 className='w-full border border-[#CBCBCB] py-2 px-3 rounded-md'
                                 {...register(`cooperate.${index}.lga`, {required : true})}>
                                     <option value="LGA">Select LGA</option>
+                                    <option value="LGA">Vandekya</option>
+                                    <option value="LGA">Bende</option>
                                     {/* {DaysArray.map((day : number, i:number) => 
                                 <option value={day} key={i}>{day < 10 ? `0${day}` : day}</option>
                                 )} */}
@@ -220,13 +431,15 @@ export const CooperateFormsComponent:React.FC<Props> = ({
                                 <p>Signature:</p>
                                 <input
                                     type="file"
-                                    accept="images/*"
+                                    accept=".jpg,.jpeg,.png"
                                     className='hidden'
                                     id={`signature-${index}`}
-                                    // name="signature"
-                                    // onChange={(e) => onChangeFileHandler(e, index)}
                                     {...register(`cooperate.${index}.signature`, {
                                         required : true,
+                                        onChange: async (e : any) => {
+                                            const key = `cooperate.${index}.signature`;
+                                            await uploadPartnerAttachment((getValues(key) as FileList), key);
+                                        }
                                     })}
                                     />
                                 <div className='text-black'>{getValues(`cooperate.${index}.signature`)[0]?.name }</div>
@@ -247,17 +460,19 @@ export const CooperateFormsComponent:React.FC<Props> = ({
                                     </div>
                                 }
                             </div>
-                            <div className="flex justify-between gap-2 items-center py-2 px-4 bg-[#DFDDEC] text-xs text-black font-semibold rounded">
+                            <div className="flex justify-between gap-2 items-center py-2 px-4 bg-[#FFFAFA] text-xs text-black font-semibold rounded">
                                 <p>Photograph&nbsp;Photograph:</p>
                                 <input
                                     type="file"
-                                    accept="images/*"
+                                    accept=".jpg,.jpeg,.png"
                                     className='hidden'
                                     id={`passport-${index}`}
-                                    // name="signature"
-                                    // onChange={(e) => onChangeFileHandler(e, index)}
                                     {...register(`cooperate.${index}.passport`, {
                                         required : true,
+                                        onChange: async (e : any) => {
+                                            const key = `cooperate.${index}.passport`;
+                                            await uploadPartnerAttachment((getValues(key) as FileList), key);
+                                        }
                                     })}
                                     />
                                 <div className='text-black'>{getValues(`cooperate.${index}.passport`)[0]?.name }</div>
@@ -281,13 +496,15 @@ export const CooperateFormsComponent:React.FC<Props> = ({
                             <div className="flex justify-between gap-2 items-center py-2 px-4 bg-[#DFDDEC] text-xs text-black font-semibold rounded">
                                 <input
                                     type="file"
-                                    accept="images/*"
+                                    accept=".jpg,.jpeg,.png"
                                     className='hidden'
                                     id={`meansOfId-${index}`}
-                                    // name="signature"
-                                    // onChange={(e) => onChangeFileHandler(e, index)}
                                     {...register(`cooperate.${index}.meansOfId`, {
                                         required : true,
+                                        onChange: async (e : any) => {
+                                            const key = `cooperate.${index}.meansOfId`;
+                                            await uploadPartnerAttachment((getValues(key) as FileList), key);
+                                        }
                                     })}
                                 />
                                 <p>Means&nbsp;Of&nbsp;Identification:</p>
@@ -313,13 +530,15 @@ export const CooperateFormsComponent:React.FC<Props> = ({
                             <div className="flex justify-between gap-2 items-center py-2 px-4 bg-[#FFFAFA] text-xs text-black font-semibold rounded">
                                 <input
                                     type="file"
-                                    accept="images/*"
+                                    accept=".jpg,.jpeg,.png"
                                     className='hidden'
                                     id={`certificate-${index}`}
-                                    // name="signature"
-                                    // onChange={(e) => onChangeFileHandler(e, index)}
                                     {...register(`cooperate.${index}.certificate`, {
                                         required : true,
+                                        onChange: async (e : any) => {
+                                            const key = `cooperate.${index}.certificate`;
+                                            await uploadPartnerAttachment((getValues(key) as FileList), key);
+                                        }
                                     })}
                                 
                                 />
@@ -344,15 +563,68 @@ export const CooperateFormsComponent:React.FC<Props> = ({
                                 }
                             </div>
                         </div>
+                        {/* <FormActionButtons
+                            index={index}
+                            getSingleSavedForm={getSavedForm(index).includes(index)}
+                            isEdit={isEdit}
+                            onSaveHandler={onSaveHandler(index)}
+                            onEditHandler={onEditPartnerHandler(index)}
+                            onClickEditButtonHandler={onClickEditButtonHandler(index)}
+                            onDeletePartnerHandler={onDeletePartnerHandler(index)}
+
+                        /> */}
                         <div className='flex justify-end text-white'>
-                            <button className='bg-[#2B85F0] rounded-md outline-none px-4 py-2 text-xs flex flex-row items-center font-semibold gap-1'>
-                                <SaveOutlinedIcon sx={{ fontSize: '15px' }} />
-                                <p>Save</p>
-                            </button>
-                        </div>
+                        {!getSavedForm(index).includes(index) ?
+                            <div className='flex justify-end text-white'>
+                                <button 
+                                id={`save-${index}-button`}
+                                className='bg-[#2B85F0] rounded-md outline-none px-4 py-2 text-xs flex flex-row items-center font-semibold gap-1'
+                                onClick={() => onSaveHandler(index)}>
+                                    <SaveOutlinedIcon sx={{ fontSize: '15px' }} />
+                                    <p>Save</p>
+                                </button>
+                            </div>
+
+                                : 
+                                <div className='flex flex-row items-center gap-4'>
+                                    <button
+                                        className='bg-[#56134B] rounded-md 
+                                        text-white outline-none 
+                                        px-4 py-2 text-xs flex flex-row 
+                                        items-center font-semibold gap-1
+                                        disabled:bg-[#EFF0F6] 
+                                        disabled:shadow-none 
+                                        disabled:text-gray-500 disabled:cursor-default'
+                                        onClick={() => isEdit ? onEditPartnerHandler(index) : onClickEditButtonHandler(index)}
+                                    >
+                                        <object data="/delete.svg" className='w-4 h-4  object-contain' />
+                                        {isEdit ? "Save Changes" : "Edit"}
+                                    </button>
+                                    <button
+                                        className='bg-[#FF2D2D] rounded-md
+                                        text-white outline-none 
+                                        px-4 py-2 text-xs flex flex-row 
+                                        items-center font-semibold gap-1
+                                        disabled:bg-[#EFF0F6] 
+                                        disabled:shadow-none 
+                                        disabled:text-gray-500 disabled:cursor-default'
+                                        onClick={() => onDeletePartnerHandler(index)}
+                                    >
+                                        <object
+                                            data="/edit.svg"
+                                            type="image/svg+xml"
+                                            className='w-4 h-4 .svg object-contain'
+                                        />
+                                        Delete
+                                    </button>
+                                </div>
+                        }
+                    </div>
                     </div>
                 )}
             {/* </form> */}
+            {isSaving && <ComponentLoader/>}
+            {isDeleting && <ComponentLoader/>}
         </>
     );
 }

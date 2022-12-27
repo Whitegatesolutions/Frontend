@@ -70,8 +70,8 @@ export const ResponsiveSideBar : FC<Props1> = ({values : {body}, firstName, last
                 </div>
 
                 <div className='text-center my-4 text-lg font-semibold capitalize'>
-                    <p>{firstName}</p>
                     <p>{lastName}</p>
+                    <p>{firstName}</p>
                 </div>
 
                 <section className='my-8 w-full flex flex-col'>
