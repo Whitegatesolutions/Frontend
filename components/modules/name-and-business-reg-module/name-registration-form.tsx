@@ -154,7 +154,7 @@ export const NameRegistrationFormComponent = () : JSX.Element => {
                             'visible text-xs text-[#FF2D2D]'
                             :'invisible'
                         }`}>
-                            First and Second business Names must not be the same
+                            First and Second business Names should not be the same
                         </span>
                     </div>
                 </div>

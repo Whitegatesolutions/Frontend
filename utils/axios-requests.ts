@@ -62,7 +62,7 @@ export const multipleFilePostRequest = async (
 		headers: {
 			'Content-Type': 'multipart/form-data',
 		},
-        timeout : 600000
+        //timeout : 600000
 	});
 };
 
@@ -75,7 +75,7 @@ export const postAxiosRequestWithHeaderForBusinessReg = async (value : AxiosRequ
             'Content-Type' : 'application/json',
             Authorization : 'Bearer '.concat(getToken(window.localStorage.getItem('token')))
         },
-         timeout: 600000
+         //timeout: 600000
         
     });
 }

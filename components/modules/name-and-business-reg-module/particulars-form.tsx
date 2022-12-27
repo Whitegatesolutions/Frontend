@@ -168,7 +168,6 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
 
     const onSaveHandler = async (data: any, index: number) => {
         console.log(files);
-        return
         //  if(!data.signature || 
         //     !data.passport || 
         //     !data.meanOfId || 
@@ -321,8 +320,6 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
 
    
     const onSubmitIndividualHandler = async (data: any) => {
-
-        return;
         console.log('data', data);
         // console.log('businessName REG', getNameRegObjectSelector);
         const { firstNameSuggestion,
@@ -349,6 +346,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
             });
 
             console.log('files ',files);
+            return;
             if (typeof files !== 'undefined' && files.length !== 0) {
                 const filePayload = new FormData();
                 for (const file of files) {
@@ -400,7 +398,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                 type: "INDIVIDUAL",
                                 signature: tempArray[i].signature,
                                 passport: tempArray[i].passport,
-                                competenceCertificate: tempArray[i].certificate,
+                                competenceCertificate:'https://lh3.googleusercontent.com/p/AF1QipM4-WVvM0GWzsKYqxPpQcNiEs5KfBi7qaNhFIaH=s680-w680-h510', //tempArray[i].certificate,
                                 idCardLink: tempArray[i].meansOfId
                             };
 
@@ -872,12 +870,12 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                 )}
 
                 {/* <CooperateFormsComponent  
-    array={fieldsArray}
-    register={registerCooperateFormValues}
-    watch={watchForm}
-    setValue={setCooperateFormValue}
-    getValues={getValuesFromCooperate}
-    /> */}
+                array={fieldsArray}
+                register={registerCooperateFormValues}
+                watch={watchForm}
+                setValue={setCooperateFormValue}
+                getValues={getValuesFromCooperate}
+                /> */}
 
                 <section className='w-full grid md:grid-cols-2 gap-2 my-8'>
                     <div className='text-sm flex flex-col md:flex-row items-center gap-2 w-auto'>
