@@ -3,21 +3,20 @@ import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined
 import ControlPointRoundedIcon from '@mui/icons-material/ControlPointRounded';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import React from 'react';
-import { CircularProgress, InputLabel, Snackbar, SnackbarContent } from '@mui/material';
-import { BusinessRegParticularsInterface, CooperateRegParticularsInterface, ErrorInterfaceObj } from '../../../utils/constants';
-import { businessRegObjInstance, cooperateFormObj, DaysArray, MonthsArray, Years } from '../../../utils/collections';
-import { FormParticularsFileUpload } from '../../shared-components/form-particulars-file-upload';
+import { Snackbar, SnackbarContent } from '@mui/material';
+import { ErrorInterfaceObj } from '../../../utils/constants';
+import { cooperateFormObj, DaysArray, MonthsArray, Years } from '../../../utils/collections';
 import { CooperateFormsComponent } from './cooperate-forms';
 import { useFieldArray, useForm } from 'react-hook-form';
-import { isButtonFormDisabled, validateEmail } from '../../../utils/util-functions';
+import { validateEmail } from '../../../utils/util-functions';
 import { useSelector, useDispatch } from 'react-redux';
 import { AnyAction, Dispatch } from 'redux';
 import { addLgaData, setBusinessNameRegId, setCooperateFieldArrayLength, setIndividualFieldArrayLength, setStateIdData } from '../../../redux/slices/app-slice';
-import { multipleFilePostRequest, postAxiosRequestWithHeader, postAxiosRequestWithHeaderForBusinessReg } from '../../../utils/axios-requests';
+import { createBusinessNameRegJob, deleteAxiosRequest, patchAxiosRequestWithHeader, postAxiosRequestWithHeader, postAxiosRequestWithHeaderForBusinessReg, uploadFiles } from '../../../utils/axios-requests';
 import { AxiosError } from 'axios';
 import { initialErrorObj } from '../login-module/login-form';
 import { ComponentLoader } from '../componentLoader';
-import { isError } from 'react-query';
+import { BusinessNameRegJobType, CreateBusinessNameRegPartnerType, JobResponseType } from '../../../utils/types.utils';
 
 const partnersObj = {
     firstName: "",
@@ -54,18 +53,20 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
         index: 0
     });
     const [axiosResponse, setAxiosResponse] = React.useState<ErrorInterfaceObj>(initialErrorObj);
-
+    const [fileNames, setFileNames] = React.useState([filesObj]);
     const [requestStatus, isRequestSuccessful] = React.useState<any[]>([]);
-
-    const [files, setFiles] = React.useState([filesObj]);
 
     const [state, setState] = React.useState<any>({
         open: true,
         vertical: 'top',
         horizontal: 'right',
     });
-    const [savedPartnerId, setPartnerId] =  React.useState('');
-    const [triggerUseEffect, setTrigger] = React.useState(false);
+    const [isSaving, save] = React.useState(false);
+    const [isEdit, setEdit] = React.useState(false);
+
+    const [isDeleting, setDeleteState] = React.useState<boolean>(false);
+
+    const [savedPartnerId, setPartnerId] =  React.useState<any[]>([]);
 
     const { vertical, horizontal, open } = state;
     const stateSelector = useSelector((state: any) => state.store.state);
@@ -74,8 +75,6 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
     const getNameRegObjectSelector = useSelector((state: any) => state.store.businessNameRegistration);
     const getNameRegIdSelector = useSelector((state: any) => state.store.businessNameRegistrationId);
     const isValidBusinessForm = useSelector((state : any) => state.store.nameRegFormIsValid);
-    //console.log('form Valid', isValidBusinessForm);
-        
 
     const dispatch: Dispatch<AnyAction> = useDispatch();
 
@@ -90,399 +89,328 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
         watch
     } = useForm<any>({
         // defaultValues: {}; you can populate the fields by this attribute 
-        // defaultValues : partnersObj
     });
     const watchAllInputFields = watch();
-
     const { fields, append } = useFieldArray<any>({
         control,
-        name: "values"
+        name: "values",
     });
-
-    const {
-        register: registerCooperateFormValues,
-        formState: { isValid: isCooperateFormValid },
-        setError: setErrorForCooperateForm,
-        setValue: setCooperateFormValue,
-        getValues: getValuesFromCooperate,
-        handleSubmit: submitCooperateFormHandler,
-        watch: watchForm
-    } = useForm<any>({
-        // defaultValues: {}; you can populate the fields by this attribute 
-        // defaultValues : partnersObj
-    });
-
     const { fields: fieldsArray, append: appendToCooperate } = useFieldArray<any>({
         control,
         name: "cooperate"
     });
-    const addCooperateForm = () => {
-        appendToCooperate(cooperateFormObj);
-        dispatch(setCooperateFieldArrayLength(fieldsArray.length));
-    }
 
-    const getSavedForm = (index : number) =>{
+    console.log({savedPartnerId});
+
+    const getSavedForm = (index : number) => {
         //get index of saved partners
         return requestStatus.filter((i:number) => index === i);
     }
-    const addFormOnClickHandler = () => {
-        append(partnersObj);
-        dispatch(setIndividualFieldArrayLength(fields.length));
+
+    const uploadPartnerAttachment = async (fileList: FileList, key: string): Promise<string[]> => {
+        //const saveButton = document.getElementById(`save-${index}-button`) as HTMLButtonElement;
+        try {
+            //if(saveButton) saveButton.disabled = true;
+            const file = fileList.item(0);
+            if (file) {
+                const uploadedFileResponse = await uploadFiles([file]);
+                if (uploadedFileResponse?.success) {
+                    const [uploadedFile] = uploadedFileResponse.data;
+                    setValue(key, uploadedFile);
+                }
+                return uploadedFileResponse.data ?? [];
+            }
+            throw new Error('File was not found')
+        }
+        catch (ex : any) {
+            setAxiosResponse({...axiosResponse, msg : ex.message, isError : true});
+            setTimeout(() => {
+                setAxiosResponse({...axiosResponse, msg : '', isError : false});
+            },4000);
+            throw ex;
+        }
+    }
+    
+    const addCooperateForm = async () => {
+        if(getNameRegIdSelector !== ''){
+            appendToCooperate(cooperateFormObj);
+            dispatch(setCooperateFieldArrayLength(fieldsArray.length));
+            return;
+        }
+        await createBusinessNameRegJob({
+            businessNameRegDetails: { ...getNameRegObjectSelector }
+        }).then((res) => {
+            const {data : {data, success, code}} = res;
+            if(data?.businessNameRegistrationId){
+                appendToCooperate(cooperateFormObj);
+                dispatch(setCooperateFieldArrayLength(fieldsArray.length));
+                dispatch(setBusinessNameRegId(data.businessNameRegistrationId));
+            }
+        })
+        .catch((err : AxiosError) => {
+            if(err.isAxiosError){
+                if(!err?.response?.data){
+                    alert(err?.message);   
+                    return; 
+                }
+                const { data : {message} } = err?.response as any;
+                setAxiosResponse({...axiosResponse, msg : message, isError : true});
+
+                setTimeout(() => {
+                    setAxiosResponse({...axiosResponse, msg : '', isError :false});
+                },6000);
+            }
+        });
     }
 
-    // const onChangeTextHandler = (e: any, index: number) => {
-    //     const { target: { value } } = e;
+    const addFormOnClickHandler = async () => {
+        if(getNameRegIdSelector !== ''){
+            append(partnersObj);
+            dispatch(setIndividualFieldArrayLength(fields.length));
+            return;
+        }
+        dispatch(setIndividualFieldArrayLength(fields.length));
+        await createBusinessNameRegJob({
+            businessNameRegDetails: { ...getNameRegObjectSelector }
+        }).then((res) => {
+            const {data : {data, success, code}} = res;
+            if(data?.businessNameRegistrationId){
+                append(partnersObj);
+                dispatch(setBusinessNameRegId( data.businessNameRegistrationId))
+            }
+        })
+        .catch((err : AxiosError) => {
+            if(err.isAxiosError){
+                if(!err?.response?.data){
+                    alert(err?.message);   
+                    return; 
+                }
+                const { data : {message} } = err?.response as any;
+                setAxiosResponse({...axiosResponse, msg : message, isError : true});
 
-    //     //const { name, size, type } = file;
-    //     const newSignatureFile = forms.map((attachment: any, i: number) => index === i
-    //         ? Object.assign(attachment, { [e.target.name]: value })
-    //         : attachment);
-
-    //     setNumberOfForms(newSignatureFile);
-    // }
-
-    // const onChangeFileHandler = (e: any, index: number, elementId: string) => {
-    //     const { target: { files } } = e;
-
-    //     const fieldName: string[] = elementId.split('-');
-    //     const file = files[0];
-    //     if (file) {
-    //         //console.log('{e,index,elementId}', {file,index,feild : fieldName[0]});
-    //         const { name, size, type } = file;
-    //         const newSignatureFile = forms.map((attachment: any, i: number) => index === i
-    //             ? Object.assign(attachment, { [fieldName[0]]: name })
-    //             : attachment);
-
-    //         setNumberOfForms(newSignatureFile);
-    //     }
-    // }
+                setTimeout(() => {
+                    setAxiosResponse({...axiosResponse, msg : '', isError :false});
+                },6000);
+            }
+        });
+        
+        //console.log({getNameRegIdSelector});
+    }
     
-      const handleClose = () => {
+    const handleClose = () => {
         setState({ ...state, open: false });
-      };
+    };
 
     const emptyFileInputField = (elementId: string, index: number) => {
         setValue(`${elementId}`, '');
         document.getElementById(elementId)?.click();
     }
 
-    const onSaveHandler = async (data: any, index: number) => {
-        console.log(files);
-        //  if(!data.signature || 
-        //     !data.passport || 
-        //     !data.meanOfId || 
-        //     !data.certificate || 
-        //     !data.firstName || 
-        //     !data.lastName || 
-        //     !data.otherName ||
-        //     !data.address ||
-        //     !data.lgaId || !data.city || !data.email || 
-        //     !data.nationality || !data.occupation || !data.phoneNumber ||
-        //     !data.state){
-        //         setAxiosResponse({...axiosResponse, msg: 'Please Fill Out all fields before saving', isError : true});
-        //         setTimeout(() => {
-        //         setAxiosResponse({...axiosResponse, msg: '', isError : true});
-        //         },4000);
-        //         return;
-        //     }
+    const onSaveHandler = async (index: number) => {
+
         const saveButton = document.getElementById(`save-${index}-button`) as HTMLButtonElement;
         const divForm = document.getElementById(`form-div${index}`) as HTMLDivElement;
-
-        //console.log('data.save', data);
-        const { firstNameSuggestion,
-            secondNameSuggestion, 
-            businessAddress, 
-            email, 
-            phoneNumber, 
-            userId 
-        } = getNameRegObjectSelector;
-        //const inputs = document.querySelector('input') as HTMLInputElement; inputs.readOnly =false;inputs.readOnly = true;
-
-        const body = document.body as HTMLBodyElement;
-        
-        if (saveButton) {
-            saveButton.disabled = true;
-
-            //converting individual files to FileList array for Api payload
-
-            const filesPayload: FormData = new FormData();
-            filesPayload.append("files[]", getValues(`values.${index}.signature`)[0] as File);
-            filesPayload.append("files[]", getValues(`values.${index}.passport`)[0] as File);
-            filesPayload.append("files[]", getValues(`values.${index}.meansOfId`)[0] as File);
-            filesPayload.append("files[]", getValues(`values.${index}.certificate`)[0] as File);
-            //beginning files upload 
-
-            try {
-                const response = await multipleFilePostRequest('upload-files', filesPayload);
-                console.log(response.data);
-                const {success, code, data: fileData} = response.data;
-
-                    if (success && code === 200) {
-                        const savePartnerObj = {
-                            firstName: getValues(`values.${index}.firstName`),//data?.firstName,
-                            lastName: getValues(`values.${index}.lastName`),
-                            otherName: getValues(`values.${index}.otherName`),//data?.otherName,
-                            address: getValues(`values.${index}.residentialAddress`),//data?.residentialAddress,
-                            lgaId: '3a7e7bd2-6f7c-4945-adf3-89a1d564db08',//data?.lga,
-                            city: getValues(`values.${index}.city`), //data?.city,
-                            dateOfBirth: new Date(`${getValues(`values.${index}.year`)}/${getValues(`values.${index}.month`)}/${getValues(`values.${index}.day`)} GMT`),
-                            occupation: getValues(`values.${index}.occupation`),//data?.occupation,
-                            nationality: getValues(`values.${index}.nationality`),//data?.nationality,
-                            email: getValues(`values.${index}.email`),//data?.email,
-                            phoneNumber: getValues(`values.${index}.telephoneNumber`),//data?.telephoneNumber,
-                            type: "INDIVIDUAL",
-                            signature: fileData[0],
-                            passport: fileData[1],
-                            competenceCertificate: fileData[3],
-                            idCardLink: fileData[2],
-                            businessNameRegistrationId: getNameRegIdSelector
-                        }
-                        const savePartnerObjInsideArray = {
-                            firstName: getValues(`values.${index}.firstName`),//data?.firstName,
-                            lastName: getValues(`values.${index}.lastName`),
-                            otherName: getValues(`values.${index}.otherName`),//data?.otherName,
-                            address: getValues(`values.${index}.residentialAddress`),//data?.residentialAddress,
-                            lgaId: '3a7e7bd2-6f7c-4945-adf3-89a1d564db08',//data?.lga,
-                            city: getValues(`values.${index}.city`), //data?.city,
-                            dateOfBirth: new Date(`${getValues(`values.${index}.year`)}/${getValues(`values.${index}.month`)}/${getValues(`values.${index}.day`)} GMT`),
-                            occupation: getValues(`values.${index}.occupation`),//data?.occupation,
-                            nationality: getValues(`values.${index}.nationality`),//data?.nationality,
-                            email: getValues(`values.${index}.email`),//data?.email,
-                            phoneNumber: getValues(`values.${index}.telephoneNumber`),//data?.telephoneNumber,
-                            type: "INDIVIDUAL",
-                            signature: fileData[0],
-                            passport: fileData[1],
-                            competenceCertificate: fileData[3],
-                            idCardLink: fileData[2]
-                        };
-                        const payload = {
-                            uri: getNameRegIdSelector === '' ? 'job/job/create-business-name-reg' :'business-name-registration-partner',
-                            body: getNameRegIdSelector === '' ? 
-                            { businessNameRegDetails: {
-                                firstNameSuggestion,
-                                secondNameSuggestion,
-                                businessAddress,
-                                email,
-                                phoneNumber,
-                                userId,
-                                partners : [savePartnerObjInsideArray]
-                                }
-                            }
-                            :savePartnerObj
-                        };
-
-                        await postAxiosRequestWithHeader(payload)
-                            .then((response) => {
-                                const { data, success, message, code } = response.data;
-                                console.log('response', data);
-
-                                if (success && code === 201) {
-
-                                 body.className = "reset-Cursor";
-                                    saveButton.disabled = false;
-                                    divForm.className = "saveForm w-full my-4 rounded-md border border-[#CBCBCB] shadow-lg bg-white h-auto p-4";
-                                    setPartnerId(getNameRegIdSelector !== "" 
-                                    ?  data.id 
-                                    : data?.businessNameRegistration?.registeredPartnersForThsBusiness[0]?.id);
-
-                                    isRequestSuccessful((prev) => [...prev, index]);
-                                }
-                                if(getNameRegIdSelector === '')
-                                dispatch(setBusinessNameRegId(data?.businessNameRegistrationId));
-                            }).catch((ex: AxiosError) => {
-                                //isRequestSuccessful(false);
-                                 saveButton.disabled = false;
-                                if (!ex?.response?.data) {
-                                    alert(ex.message);
-                                    return;
-                                }
-                                if (ex?.response?.data) {
-                                    const { data: { success, message, code } } = ex.response as any;
-                                    if (!success && code !== 200) {
-                                        setAxiosResponse({ ...axiosResponse, msg: message, isError: true });
-                                        setTimeout(() => {
-                                            setAxiosResponse({ ...axiosResponse, msg: "", isError: false });
-                                        }, 4000);
-                                    }
-
-                                }
-                            });
-
-                    }
-            } catch (error : any) {
-                saveButton.disabled = false;
-                body.className = "reset-Cursor";
-                alert(error?.message);
-            }
+        if(!saveButton){
+            return;
         }
+        save(true);
+        const savePartnerObj: Partial<CreateBusinessNameRegPartnerType> = {
+            firstName: getValues(`values.${index}.firstName`),//data?.firstName,
+            lastName: getValues(`values.${index}.lastName`),
+            otherName: getValues(`values.${index}.otherName`),//data?.otherName,
+            address: getValues(`values.${index}.residentialAddress`),//data?.residentialAddress,
+            lgaId: '3a7e7bd2-6f7c-4945-adf3-89a1d564db08',//data?.lga,
+            city: getValues(`values.${index}.city`), //data?.city,
+            dateOfBirth: new Date(`${getValues(`values.${index}.year`)}/${getValues(`values.${index}.month`)}/${getValues(`values.${index}.day`)} GMT`),
+            occupation: getValues(`values.${index}.occupation`),//data?.occupation,
+            nationality: getValues(`values.${index}.nationality`),//data?.nationality,
+            email: getValues(`values.${index}.email`),//data?.email,
+            phoneNumber: getValues(`values.${index}.telephoneNumber`),//data?.telephoneNumber,
+            type: "INDIVIDUAL",
+            signature: getValues(`values.${index}.signature`),
+            passport: getValues(`values.${index}.passport`),
+            competenceCertificate: getValues(`values.${index}.certificate`),
+            idCardLink: getValues(`values.${index}.meansOfId`),
+            businessNameRegistrationId: getNameRegIdSelector
+        };
+        console.log({savePartnerObj})
+        const response = await postAxiosRequestWithHeader({
+            uri: 'business-name-registration-partner',
+            body: savePartnerObj,
+        }).then((res) => {
+            const { data, success, message, code } = res.data;
+            console.log('response', data);
+            save(false);
+            if (success && code === 201) {
+                saveButton.disabled = false;
+                divForm.className = "saveForm w-full my-4 rounded-md border border-[#CBCBCB] shadow-lg bg-white h-auto p-4";
+
+                //console.log({key : data?.businessNameRegistration?.registeredPartnersForThsBusiness?.pop()?.id});
+                setPartnerId(
+                    (prev) => [...prev, data.id]
+                );
+
+                isRequestSuccessful((prev) => [...prev, index]);
+            }
+            
+
+        })
+        .catch((err : AxiosError) => {
+            save(false);
+            if(err.isAxiosError){
+                saveButton.disabled = false;
+                if (!err?.response?.data) {
+                    alert(err.message);
+                    return;
+                }
+                if (err?.response?.data) {
+                    const { data: { success, message, code } } = err.response as any;
+                    if (!success && code !== 200) {
+                        setAxiosResponse({ ...axiosResponse, msg: message, isError: true });
+                        setTimeout(() => {
+                            setAxiosResponse({ ...axiosResponse, msg: "", isError: false });
+                        }, 4000);
+                    }
+                }
+            }
+        });
+    }
+    const onClickEditButtonHandler = async(index : number) =>{
+        setEdit(true);
+        const divForm = document.getElementById(`form-div${index}`) as HTMLDivElement;
+        divForm.classList.remove("saveForm");
+    }
+    const onEditPartnerHandler = async(index : number) => {
+        const divForm = document.getElementById(`form-div${index}`) as HTMLDivElement;
+        
+
+        const savePartnerObj: Partial<CreateBusinessNameRegPartnerType> = {
+            firstName: getValues(`values.${index}.firstName`),//data?.firstName,
+            lastName: getValues(`values.${index}.lastName`),
+            otherName: getValues(`values.${index}.otherName`),//data?.otherName,
+            address: getValues(`values.${index}.residentialAddress`),//data?.residentialAddress,
+            lgaId: '3a7e7bd2-6f7c-4945-adf3-89a1d564db08',//data?.lga,
+            city: getValues(`values.${index}.city`), //data?.city,
+            dateOfBirth: new Date(`${getValues(`values.${index}.year`)}/${getValues(`values.${index}.month`)}/${getValues(`values.${index}.day`)} GMT`),
+            occupation: getValues(`values.${index}.occupation`),//data?.occupation,
+            nationality: getValues(`values.${index}.nationality`),//data?.nationality,
+            email: getValues(`values.${index}.email`),//data?.email,
+            phoneNumber: getValues(`values.${index}.telephoneNumber`),//data?.telephoneNumber,
+            type: "INDIVIDUAL",
+            signature: getValues(`values.${index}.signature`),
+            passport: getValues(`values.${index}.passport`),
+            competenceCertificate: getValues(`values.${index}.certificate`),
+            idCardLink: getValues(`values.${index}.meansOfId`),
+            businessNamePartnerId : savedPartnerId.at(index)
+        };
+
+        save(true);
+        await patchAxiosRequestWithHeader({
+            uri: 'business-name-registration-partner',
+            body: savePartnerObj,
+        }).then((res) => {
+            const { data, success, message, code } = res.data;
+            console.log('response', data);
+            save(false);
+            setEdit(false);
+            if (success && code === 200) {
+                divForm.className = "saveForm w-full my-4 rounded-md border border-[#CBCBCB] shadow-lg bg-white h-auto p-4";
+                //isRequestSuccessful((prev) => [...prev, index]);
+            }
+            
+
+        })
+        .catch((err : AxiosError) => {
+            save(false);
+            setEdit(false);
+            if(err.isAxiosError){
+                if (!err?.response?.data) {
+                    alert(err.message);
+                    return;
+                }
+                if (err?.response?.data) {
+                    const { data: { success, message, code } } = err.response as any;
+                    if (!success && code !== 200) {
+                        setAxiosResponse({ ...axiosResponse, msg: message, isError: true });
+                        setTimeout(() => {
+                            setAxiosResponse({ ...axiosResponse, msg: "", isError: false });
+                        }, 4000);
+                    }
+                }
+            }
+        });
+    }
+    const onDeletePartnerHandler = async (index : number) => {
+        const divForm = document.getElementById(`form-div${index}`) as HTMLDivElement;
+        setDeleteState(true);
+        const requestObj = {
+            uri : 'business-name-registration-partner',
+            body : [savedPartnerId.at(index)]
+        } 
+        await deleteAxiosRequest(requestObj)
+        .then((res) => {
+            const { data, success, message, code } = res.data;
+            console.log('response', data);
+            setDeleteState(false);
+            if (success && code === 200) {
+                divForm.style.display = 'none';
+            }
+        }).catch((err) => {
+            setDeleteState(false);
+            if(err.isAxiosError){
+                if (!err?.response?.data) {
+                    alert(err.message);
+                    return;
+                }
+                if (err?.response?.data) {
+                    const { data: { success, message, code } } = err.response as any;
+                    if (!success && code !== 200) {
+                        setAxiosResponse({ ...axiosResponse, msg: message, isError: true });
+                        setTimeout(() => {
+                            setAxiosResponse({ ...axiosResponse, msg: "", isError: false });
+                        }, 4000);
+                    }
+                }
+            }
+        });
 
     }
+    const onChangeFileNamesHandler = (keyName:string, index: number, value : string) => {
+    //const { name, size, type } = file;
+    const newSignatureFile = fileNames.map((attachment: any, i: number) => index === i
+        ? Object.assign(attachment, { [keyName]: value })
+        : attachment);
 
+        console.log({newSignatureFile});
+    setFileNames(newSignatureFile);
+}
    
     const onSubmitIndividualHandler = async (data: any) => {
         console.log('data', data);
-        // console.log('businessName REG', getNameRegObjectSelector);
-        const { firstNameSuggestion,
-                secondNameSuggestion, 
-                businessAddress, 
-                email, 
-                phoneNumber, 
-                userId } 
-        = getNameRegObjectSelector;
-
-        let partners : any[] = [];
-        let tempArray: any[] = [];
-        tempArray = [...data.values];
-
-        console.log('tempArray ', tempArray);
-
-        if (typeof tempArray !== 'undefined' && tempArray.length !== 0) {
-            const files: any[] = [];
-            tempArray.map((value: any) => {
-                files.push(value.passport[0]);
-                files.push(value.meansOfId[0]);
-                files.push(value.signature[0]);
-                files.push(value.certificate[0]);
-            });
-
-            console.log('files ',files);
-            return;
-            if (typeof files !== 'undefined' && files.length !== 0) {
-                const filePayload = new FormData();
-                for (const file of files) {
-                    //console.log(file);
-                    filePayload.append("files[]", file);
-                }
-
-                try {
-                    console.log('filePayload ', filePayload);
-                    const fileResponse = await multipleFilePostRequest('upload-files', filePayload);
-                    //console.log(fileResponse.data);
-                        const {success, code, data: fileData} = fileResponse.data;
-                        console.log('file data', fileData);
-                        if (success && code === 200) {
-
-                        //this loop helps to calculate the exact place to place each file link in the db table
-                        tempArray.map((val: any) => {
-                            for (let i = 0; i < fileData.length; i++) {
-                                if (i === 0) {
-                                    val.passport = fileData[i];
-                                    val.meansOfId = fileData[i+=1];
-                                    val.signature = fileData[i+=1];
-                                    val.certificate = fileData[i+=1];
-
-                                } else if (i % 3 === 0 && i !== 0) {
-                                    val.passport = fileData[i];
-                                    if (i < fileData.length) {
-                                        val.meansOfId = fileData[i+=1];
-                                        val.signature = fileData[i+=1];
-                                        val.certificate = fileData[i+=1]
-                                    }
-                                }
-                            }
-                        });
-                        
-                        for(let i = 0; i < tempArray.length; i++){
-                            const obj = {
-                                firstName: tempArray[i].firstName,
-                                lastName: tempArray[i].lastName,
-                                otherName: tempArray[i].otherName,
-                                address: tempArray[i].residentialAddress,
-                                lgaId: '3a7e7bd2-6f7c-4945-adf3-89a1d564db08',//tempArray[i].lga,
-                                city: tempArray[i].city,
-                                dateOfBirth: new Date(`${tempArray[i].year}/${tempArray[i].month}/${tempArray[i].day} GMT`),
-                                occupation: tempArray[i].occupation,
-                                nationality: tempArray[i].nationality,
-                                email: tempArray[i].email,
-                                phoneNumber: tempArray[i].telephoneNumber,
-                                type: "INDIVIDUAL",
-                                signature: tempArray[i].signature,
-                                passport: tempArray[i].passport,
-                                competenceCertificate:'https://lh3.googleusercontent.com/p/AF1QipM4-WVvM0GWzsKYqxPpQcNiEs5KfBi7qaNhFIaH=s680-w680-h510', //tempArray[i].certificate,
-                                idCardLink: tempArray[i].meansOfId
-                            };
-
-                            partners.push(obj);
-                        }
-                        console.log(partners);
-                        //return;
-                        const value = {
-                            uri: 'job/job/create-business-name-reg',
-                            body: {
-                                businessNameRegDetails: {
-                                    firstNameSuggestion,
-                                    secondNameSuggestion,
-                                    businessAddress,
-                                    email,
-                                    phoneNumber,
-                                    userId,
-                                    partners
-                                }
-                            }
-                        };
-
-                        await postAxiosRequestWithHeaderForBusinessReg(value)
-                        .then((response) => {
-                            console.log('axios response ', response.data);
-
-                            const {data:{data, success, code, message}} = response;
-                            if(code === 201 && success){
-                                //alert user Login was successful
-                                setAxiosResponse({ ...axiosResponse, msg: message, isError: false });
-
-                                setTimeout(() => {
-                                    setAxiosResponse({ ...axiosResponse, msg: "", isError: false });
-                                }, 5000);
-
-                                //go to a new page
-                            }
-                        }).catch((error : AxiosError) => {
-                            if(error.isAxiosError){
-
-                                if (error?.response?.data) {
-                                    if (!error?.response?.data) {
-                                        alert(error.message);
-                                        return;
-                                    }
-
-                                    const { data: { success, message, code } } = error.response as any;
-                                    if (!success && code !== 200) {
-                                        setAxiosResponse({ ...axiosResponse, msg: message, isError: true });
-                                        setTimeout(() => {
-                                            setAxiosResponse({ ...axiosResponse, msg: "", isError: false });
-                                        }, 5000);
-                                    }
-                                }else{
-                                    alert(error?.message);
-                                }
-                            }
-                        });
-                    }
-
-                } catch (error : any) {
-                    alert(error?.message);
-                }
-            }
-
-
-        }
+        // setTimeout(() => {
+        //     setAxiosResponse({...axiosResponse, msg : '', isError : false})
+        // },60000)
     }
 
     React.useEffect(() => {
         // const subscription = watch((value, { name, type }) => console.log(value, name, type));
         // return () => subscription.unsubscribe();
-    }, [watchAllInputFields, isSubmitSuccessful,triggerUseEffect]);
+    }, [
+        watchAllInputFields,
+        watch, 
+        isSubmitSuccessful,
+        isValidBusinessForm,]);
 
     return (
         <div className="w-full lg:w-10/12">
             {axiosResponse.msg !== '' && <Snackbar
                 anchorOrigin={{ vertical : 'top', horizontal : 'right'}}
-                open={axiosResponse.isError}
+                open={open}
                 onClose={handleClose}
                 //message={axiosResponse.msg}
                 key={vertical + horizontal}>
                      <SnackbarContent style={{
-                        backgroundColor:'#6157A0',
+                        backgroundColor: axiosResponse.isError ? '#FF2D2D' :'#6157A0',
                         color : '#fff'
                         }}
                         message={<span id="client-snackbar">{axiosResponse.msg}</span>}
@@ -540,14 +468,12 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                         </div>
 
                         {/* location details*/}
-                        <div className='w-full flex flex-col md:flex-row gap-4 text-xs text-black'>
+                        <div className='w-full flex flex-col md:flex-row gap-4 text-xs text-black'> 
                             <div className='flex flex-col md:w-1/3 w-full'>
                                 <p className='font-bold'>State</p>
                                 <select
-                                    //name="state" 
                                     className='w-full border border-[#CBCBCB] py-2 px-3 rounded-md'
                                     id={`select-${index}`}
-                                    // onChange={(e) => onChangeTextHandler(e, index)}
                                     {...register(`values.${index}.state`, {
                                         required: true,
                                         //onChange : (e) => dispatch(setStateIdData(e.target.value))
@@ -573,11 +499,13 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                     {...register(`values.${index}.lga`, { required: true })}
                                 >
                                     <option value="LGA">Select LGA</option>
-                                    {lgaSelector && lgaSelector?.map((lga: any, i: number) =>
+                                    <option value="LGA">Vandekya</option>
+                                    <option value="LGA">Bende</option>
+                                    {/* {lgaSelector && lgaSelector?.map((lga: any, i: number) =>
                                         <option value={lga.id} key={i}>
                                             {lga.name}
                                         </option>
-                                    )}
+                                    )} */}
                                 </select>
                             </div>
                             <div className='flex flex-col md:w-1/3 w-full'>
@@ -697,6 +625,11 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                     id={`signature-${index}`}
                                     {...register(`values.${index}.signature`, {
                                         required: true, 
+                                        onChange: async (e) => {
+                                            const key = `values.${index}.signature`;
+
+                                            await uploadPartnerAttachment((getValues(key) as FileList), key);
+                                        }
                                     }
                                     )}
                                 />
@@ -724,13 +657,18 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                     className='hidden'
                                     id={`passport-${index}`} 
                                     {...register(`values.${index}.passport`, { 
-                                        required: true
+                                        required: true,
+                                        onChange: async (e) => {
+                                            const key = `values.${index}.passport`;
+                                            onChangeFileNamesHandler('passport',index, getValues(key)[0]?.name);
+                                            await uploadPartnerAttachment((getValues(key) as FileList), key);
+                                        }
                                     })} />
 
                                 <p>Photograph&nbsp;Photograph:</p>
 
-                                <div className='text-black'>{getValues(`values.${index}.passport`)[0]?.name}</div>
-                                {!getValues(`values.${index}.passport`)[0]?.name ?
+                                <div className='text-black'>{fileNames.at(index)?.passport}</div>
+                                {!fileNames.at(index)?.passport ?
                                     <div className='cursor-pointer hover:text-[#1976D2] w-fit flex flex-row items-center gap-1'
                                         onClick={() => {
                                             document.getElementById(`passport-${index}`)?.click();
@@ -740,7 +678,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                     </div>
                                     :
                                     <div className='cursor-pointer text-[#FF2D2D] w-fit flex flex-row items-center gap-1'
-                                        onClick={() => emptyFileInputField(`passport-${index}`, index)}>
+                                        onClick={() => onChangeFileNamesHandler('passport',index, '')}>
                                         <object data="/delete.png" className='w-4 h-4 object-contain' />
                                         <p>Delete</p>
                                     </div>
@@ -753,7 +691,11 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                     className='hidden'
                                     id={`meansOfId-${index}`}
                                     {...register(`values.${index}.meansOfId`, { 
-                                        required: true
+                                        required: true,
+                                        onChange: async (e) => {
+                                            const key = `values.${index}.meansOfId`;
+                                            await uploadPartnerAttachment((getValues(key) as FileList), key);
+                                        }
                                     })}
                                 />
                                 <p>Means&nbsp;Of&nbsp;Identification:</p>
@@ -785,7 +727,11 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                     className='hidden'
                                     id={`certificate-${index}`}
                                     {...register(`values.${index}.certificate`, { 
-                                        required: true
+                                        required: true,
+                                        onChange: async (e) => {
+                                            const key = `values.${index}.certificate`;
+                                            await uploadPartnerAttachment((getValues(key) as FileList), key);
+                                        }
                                     })}
                                 />
                                 <p>Certificate&nbsp;Of&nbsp;Competence:</p>
@@ -812,26 +758,19 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                             {!getSavedForm(index).includes(index) ?
                                 <button
                                     id={`save-${index}-button`}
-                                    // disabled={saveState ? true : false}
                                     className='bg-[#2B85F0] rounded-md outline-none 
                                     px-4 py-2 text-xs flex flex-row 
                                     items-center font-semibold gap-1
                                     disabled:bg-[#EFF0F6] 
                                     disabled:shadow-none 
                                     disabled:text-gray-500 disabled:cursor-default'
-                                    onClick={() => {
-                                        setTrigger(!triggerUseEffect);
-                                        onSaveHandler(data, index)
-                                    }}>
-                                    {/* {isButtonFormDisabled(index) ? <CircularProgress size={'1rem'} sx={{ color: 'rgb(203 213 225)' }} /> :<SaveOutlinedIcon sx={{ fontSize: '15px' }} />} */}
+                                    onClick={() => onSaveHandler(index)}>
                                     <SaveOutlinedIcon sx={{ fontSize: '15px' }} />
                                     <p>Save</p>
                                 </button>
                                 :
                                 <div className='flex flex-row items-center gap-4'>
                                     <button
-                                        id={`save-${index}-button`}
-                                        // disabled={saveState ? true : false}
                                         className='bg-[#56134B] rounded-md 
                                         text-white outline-none 
                                         px-4 py-2 text-xs flex flex-row 
@@ -839,14 +778,12 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                         disabled:bg-[#EFF0F6] 
                                         disabled:shadow-none 
                                         disabled:text-gray-500 disabled:cursor-default'
-                                    //onClick={() => onSaveHandler(data, index)}
+                                        onClick={() => isEdit ? onEditPartnerHandler(index) : onClickEditButtonHandler(index)}
                                     >
                                         <object data="/delete.svg" className='w-4 h-4  object-contain' />
-                                        Edit
+                                        {isEdit ? "Save Changes" : "Edit"}
                                     </button>
                                     <button
-                                        id={`save-${index}-button`}
-                                        // disabled={saveState ? true : false}
                                         className='bg-[#FF2D2D] rounded-md
                                         text-white outline-none 
                                         px-4 py-2 text-xs flex flex-row 
@@ -854,7 +791,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                         disabled:bg-[#EFF0F6] 
                                         disabled:shadow-none 
                                         disabled:text-gray-500 disabled:cursor-default'
-                                            //onClick={() => onSaveHandler(data, index)}
+                                        onClick={() => onDeletePartnerHandler(index)}
                                     >
                                         <object
                                             data="/edit.svg"
@@ -869,13 +806,13 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                     </div>
                 )}
 
-                {/* <CooperateFormsComponent  
+                <CooperateFormsComponent  
                 array={fieldsArray}
-                register={registerCooperateFormValues}
-                watch={watchForm}
-                setValue={setCooperateFormValue}
-                getValues={getValuesFromCooperate}
-                /> */}
+                register={register}
+                watch={watch}
+                setValue={setValue}
+                getValues={getValues}
+                />
 
                 <section className='w-full grid md:grid-cols-2 gap-2 my-8'>
                     <div className='text-sm flex flex-col md:flex-row items-center gap-2 w-auto'>
@@ -925,10 +862,11 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                             Submit
                         </button>
                     }
-
                 </section>
             </form>
             {isSubmitting && <ComponentLoader/>}
+            {isSaving && <ComponentLoader/>}
+            {isDeleting && <ComponentLoader/>}
         </div>
     );
 }
