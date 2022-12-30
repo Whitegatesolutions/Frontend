@@ -127,8 +127,6 @@ export const NameRegistrationFormComponent = () : JSX.Element => {
     }
 
     React.useEffect(() => {
-        
-        const form = document.getElementById('form-id') as HTMLFormElement;
         const firstNameSuggestion : string = getValues(`values.firstNameSuggestion`) as string;
         const secondNameSuggestion : string = getValues(`values.secondNameSuggestion`) as string;
         const businessAddress : string = getValues(`values.businessAddress`) as string;
@@ -143,7 +141,7 @@ export const NameRegistrationFormComponent = () : JSX.Element => {
         if(!validateBusinessEmailFormat(email) || 
         !validateBusinessNames(firstNameSuggestion, secondNameSuggestion) || 
         !validateBusinessPhoneNumberFormat(phoneNumber)
-        ){  form.classList.remove("saveForm");
+        ){  //form.classList.remove("saveForm");
             return;
         }
         //make the api request here
@@ -156,7 +154,6 @@ export const NameRegistrationFormComponent = () : JSX.Element => {
             phoneNumber,
             userId : getUserId()
             }, isValid);
-            form.className = "saveForm my-8";
 
     }, [watch,
         isValid,
@@ -179,71 +176,73 @@ export const NameRegistrationFormComponent = () : JSX.Element => {
                 })
             }}
             >
-                <div className='w-full flex flex-col md:flex-row gap-4 text-xs text-black'>
-                    <div className='flex flex-col md:w-1/2 w-full'>
-                        <p className='font-bold'>Name&nbsp;Suggestion&nbsp;1</p>
+                <fieldset id='fieldset'>
+                    <div className='w-full flex flex-col md:flex-row gap-4 text-xs text-black'>
+                        <div className='flex flex-col md:w-1/2 w-full'>
+                            <p className='font-bold'>Name&nbsp;Suggestion&nbsp;1</p>
+                            <input 
+                            type="text" 
+                            id="firstName"
+                            className='text-sm py-2 px-4 rounded-md border border-[#CBCBCB] w-full'
+                            {...register(`values.firstNameSuggestion`, { 
+                                required: true,
+                            })}
+                            />
+                            <span id="name1" className='invisible'>Business&nbsp;Names&nbsp;Should&nbsp;not&nbsp;be&nbsp;the&nbsp;same</span>
+                        </div>
+                        <div className='flex flex-col md:w-1/2 w-full'>
+                            <p className='font-bold'>Name&nbsp;Suggestion&nbsp;2</p>
+                            <input 
+                            type="text" 
+                            id = "secondName"
+                            className={'py-2 text-sm  px-4 rounded-md border border-[#CBCBCB] w-full'}
+                            //'py-2 text-sm  px-4 rounded-md border border-[#FF2D2D] w-full'
+                            {...register(`values.secondNameSuggestion`, { 
+                                required: true,
+                            })}/>
+                            <span id="name2" className={'invisible'}>Business&nbsp;Names&nbsp;Should&nbsp;not&nbsp;be&nbsp;the&nbsp;same</span>
+                        </div>
+                    </div>
+
+                    <div className='flex flex-col w-full text-xs text-black my-4'>
+                        <p className='font-bold'>Business&nbsp;Address</p>
                         <input 
                         type="text" 
-                        id="firstName"
-                        className='text-sm py-2 px-4 rounded-md border border-[#CBCBCB] w-full'
-                        {...register(`values.firstNameSuggestion`, { 
-                            required: true,
-                        })}
-                        />
-                        <span id="name1" className='invisible'>Business&nbsp;Names&nbsp;Should&nbsp;not&nbsp;be&nbsp;the&nbsp;same</span>
-                    </div>
-                    <div className='flex flex-col md:w-1/2 w-full'>
-                        <p className='font-bold'>Name&nbsp;Suggestion&nbsp;2</p>
-                        <input 
-                        type="text" 
-                        id = "secondName"
-                        className={'py-2 text-sm  px-4 rounded-md border border-[#CBCBCB] w-full'}
-                        //'py-2 text-sm  px-4 rounded-md border border-[#FF2D2D] w-full'
-                        {...register(`values.secondNameSuggestion`, { 
-                            required: true,
-                        })}/>
-                        <span id="name2" className={'invisible'}>Business&nbsp;Names&nbsp;Should&nbsp;not&nbsp;be&nbsp;the&nbsp;same</span>
-                    </div>
-                </div>
-
-                <div className='flex flex-col w-full text-xs text-black my-4'>
-                    <p className='font-bold'>Business&nbsp;Address</p>
-                    <input 
-                    type="text" 
-                    className='py-2 text-sm px-4 rounded-md border border-[#CBCBCB] w-full'
-                    {...register(`values.businessAddress`, {
-                        required: true,
-                    }) }
-                    />
-                </div>
-
-                <div className='w-full md:w-3/5 flex flex-col md:flex-row gap-4 text-xs text-black mb-4'>
-                    <div className='flex flex-col md:w-1/2 w-full'>
-                        <p className='font-bold'>E-mail&nbsp;Address</p>
-                        <input 
-                        type="email"
-                        id="mail"
-                        className={`text-sm py-2 px-4 rounded-md border border-[#CBCBCB] w-full`}
-                        {...register(`values.email`, {
-                            required: true,
-                        })}/>
-                        <span id='mailSpan' className={'invisible'}>Invalid&nbsp;Email&nbsp;Format</span>
-                    </div>
-                    <div className='flex flex-col md:w-1/2 w-full'>
-                        <p className='font-bold'>Telephone</p>
-                        <input 
-                        type={"text"} 
-                        id="telephone"
                         className='py-2 text-sm px-4 rounded-md border border-[#CBCBCB] w-full'
-                        maxLength={11}
-                        {...register(`values.phoneNumber`, {
-                            required: true, 
-                            maxLength : 11
+                        {...register(`values.businessAddress`, {
+                            required: true,
                         }) }
                         />
-                        <span id="teleSpan" className={'invisible'}>Invalid&nbsp;Phone&nbsp;Number</span>
                     </div>
-                </div>
+
+                    <div className='w-full md:w-3/5 flex flex-col md:flex-row gap-4 text-xs text-black mb-4'>
+                        <div className='flex flex-col md:w-1/2 w-full'>
+                            <p className='font-bold'>E-mail&nbsp;Address</p>
+                            <input 
+                            type="email"
+                            id="mail"
+                            className={`text-sm py-2 px-4 rounded-md border border-[#CBCBCB] w-full`}
+                            {...register(`values.email`, {
+                                required: true,
+                            })}/>
+                            <span id='mailSpan' className={'invisible'}>Invalid&nbsp;Email&nbsp;Format</span>
+                        </div>
+                        <div className='flex flex-col md:w-1/2 w-full'>
+                            <p className='font-bold'>Telephone</p>
+                            <input 
+                            type={"text"} 
+                            id="telephone"
+                            className='py-2 text-sm px-4 rounded-md border border-[#CBCBCB] w-full'
+                            maxLength={11}
+                            {...register(`values.phoneNumber`, {
+                                required: true, 
+                                maxLength : 11
+                            }) }
+                            />
+                            <span id="teleSpan" className={'invisible'}>Invalid&nbsp;Phone&nbsp;Number</span>
+                        </div>
+                    </div>
+                </fieldset>
            </form>
 
             {/* divider */}

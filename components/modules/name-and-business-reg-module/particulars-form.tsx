@@ -132,6 +132,9 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
     }
     
     const addCooperateForm = async () => {
+        const form = document.getElementById('form-id') as HTMLFormElement;
+        const fieldset = document.getElementById('fieldset') as HTMLFieldSetElement;
+
         if(getNameRegIdSelector !== ''){
             appendToCooperate(cooperateFormObj);
             dispatch(setCooperateFieldArrayLength(fieldsArray.length));
@@ -145,6 +148,8 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                 appendToCooperate(cooperateFormObj);
                 dispatch(setCooperateFieldArrayLength(fieldsArray.length));
                 dispatch(setBusinessNameRegId(data.businessNameRegistrationId));
+                form.className = "saveForm my-8";
+                fieldset.disabled = true;
             }
         })
         .catch((err : AxiosError) => {
