@@ -132,6 +132,8 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
     }
     
     const addCooperateForm = async () => {
+        const form = document.getElementById('form-id') as HTMLFormElement;
+        const fieldset = document.getElementById('feildset') as HTMLFieldSetElement;
         if(getNameRegIdSelector !== ''){
             appendToCooperate(cooperateFormObj);
             dispatch(setCooperateFieldArrayLength(fieldsArray.length));
@@ -141,10 +143,12 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
             businessNameRegDetails: { ...getNameRegObjectSelector }
         }).then((res) => {
             const {data : {data, success, code}} = res;
-            if(data?.businessNameRegistrationId){
+            if(success && data?.businessNameRegistrationId){
                 appendToCooperate(cooperateFormObj);
                 dispatch(setCooperateFieldArrayLength(fieldsArray.length));
                 dispatch(setBusinessNameRegId(data.businessNameRegistrationId));
+                form.className = "saveForm my-8";
+                fieldset.disabled = true;
             }
         })
         .catch((err : AxiosError) => {
@@ -164,6 +168,8 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
     }
 
     const addFormOnClickHandler = async () => {
+        const form = document.getElementById('form-id') as HTMLFormElement;
+        const fieldset = document.getElementById('feildset') as HTMLFieldSetElement;
         if(getNameRegIdSelector !== ''){
             append(partnersObj);
             dispatch(setIndividualFieldArrayLength(fields.length));
@@ -174,9 +180,11 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
             businessNameRegDetails: { ...getNameRegObjectSelector }
         }).then((res) => {
             const {data : {data, success, code}} = res;
-            if(data?.businessNameRegistrationId){
+            if(success && data?.businessNameRegistrationId){
                 append(partnersObj);
-                dispatch(setBusinessNameRegId( data.businessNameRegistrationId))
+                dispatch(setBusinessNameRegId( data.businessNameRegistrationId));
+                form.className = "saveForm my-8";
+                fieldset.disabled = true;
             }
         })
         .catch((err : AxiosError) => {
