@@ -141,7 +141,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
             businessNameRegDetails: { ...getNameRegObjectSelector }
         }).then((res) => {
             const {data : {data, success, code}} = res;
-            if(data?.businessNameRegistrationId){
+            if(success && data?.businessNameRegistrationId){
                 appendToCooperate(cooperateFormObj);
                 dispatch(setCooperateFieldArrayLength(fieldsArray.length));
                 dispatch(setBusinessNameRegId(data.businessNameRegistrationId));
@@ -174,7 +174,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
             businessNameRegDetails: { ...getNameRegObjectSelector }
         }).then((res) => {
             const {data : {data, success, code}} = res;
-            if(data?.businessNameRegistrationId){
+            if(success && data?.businessNameRegistrationId){
                 append(partnersObj);
                 dispatch(setBusinessNameRegId( data.businessNameRegistrationId))
             }

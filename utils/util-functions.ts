@@ -7,7 +7,7 @@ export function validateEmail(email: string): boolean {
 }
 
 export function validatePhoneNumber(phone: string): boolean {
-	const re : RegExp = /^[62|0]+\d{11}/gi;
+	const re : RegExp = /^[0-9]{11}$/;
 	///^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 	return re.test(phone);
 }
