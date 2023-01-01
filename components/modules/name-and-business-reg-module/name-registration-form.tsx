@@ -62,7 +62,6 @@ export const NameRegistrationFormComponent = () : JSX.Element => {
         const nameSpan = document.getElementById('name1') as HTMLSpanElement;
         const name2Span = document.getElementById('name2') as HTMLSpanElement;
 
-
         if(!firstNameSuggestion || !secondNameSuggestion){
             nameSpan.className = "invisible";
             name2Span.className = "invisible";
@@ -127,16 +126,20 @@ export const NameRegistrationFormComponent = () : JSX.Element => {
     }
 
     React.useEffect(() => {
+<<<<<<< HEAD
+=======
+        
+>>>>>>> 492991e0c513d32866ba65f8f3e7ee9b4ae94cea
         const firstNameSuggestion : string = getValues(`values.firstNameSuggestion`) as string;
         const secondNameSuggestion : string = getValues(`values.secondNameSuggestion`) as string;
         const businessAddress : string = getValues(`values.businessAddress`) as string;
         const email : string = getValues(`values.email`) as string;
         const phoneNumber : string = getValues(`values.phoneNumber`) as string;
-        // console.log({
-        //     names : validateBusinessNames(firstNameSuggestion, secondNameSuggestion),
-        //     email : validateBusinessEmailFormat(email),
-        //     phoneNumber : validateBusinessPhoneNumberFormat(phoneNumber)
-        // });
+        console.log({
+            names : validateBusinessNames(firstNameSuggestion, secondNameSuggestion),
+            email : validateBusinessEmailFormat(email),
+            phoneNumber : validateBusinessPhoneNumberFormat(phoneNumber)
+        });
 
         if(!validateBusinessEmailFormat(email) || 
         !validateBusinessNames(firstNameSuggestion, secondNameSuggestion) || 
@@ -176,7 +179,11 @@ export const NameRegistrationFormComponent = () : JSX.Element => {
                 })
             }}
             >
+<<<<<<< HEAD
                 <fieldset id='fieldset'>
+=======
+                <fieldset id="feildset">
+>>>>>>> 492991e0c513d32866ba65f8f3e7ee9b4ae94cea
                     <div className='w-full flex flex-col md:flex-row gap-4 text-xs text-black'>
                         <div className='flex flex-col md:w-1/2 w-full'>
                             <p className='font-bold'>Name&nbsp;Suggestion&nbsp;1</p>

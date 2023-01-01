@@ -133,8 +133,12 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
     
     const addCooperateForm = async () => {
         const form = document.getElementById('form-id') as HTMLFormElement;
+<<<<<<< HEAD
         const fieldset = document.getElementById('fieldset') as HTMLFieldSetElement;
 
+=======
+        const fieldset = document.getElementById('feildset') as HTMLFieldSetElement;
+>>>>>>> 492991e0c513d32866ba65f8f3e7ee9b4ae94cea
         if(getNameRegIdSelector !== ''){
             appendToCooperate(cooperateFormObj);
             dispatch(setCooperateFieldArrayLength(fieldsArray.length));
@@ -169,6 +173,8 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
     }
 
     const addFormOnClickHandler = async () => {
+        const form = document.getElementById('form-id') as HTMLFormElement;
+        const fieldset = document.getElementById('feildset') as HTMLFieldSetElement;
         if(getNameRegIdSelector !== ''){
             append(partnersObj);
             dispatch(setIndividualFieldArrayLength(fields.length));
@@ -181,7 +187,9 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
             const {data : {data, success, code}} = res;
             if(success && data?.businessNameRegistrationId){
                 append(partnersObj);
-                dispatch(setBusinessNameRegId( data.businessNameRegistrationId))
+                dispatch(setBusinessNameRegId( data.businessNameRegistrationId));
+                form.className = "saveForm my-8";
+                fieldset.disabled = true;
             }
         })
         .catch((err : AxiosError) => {
