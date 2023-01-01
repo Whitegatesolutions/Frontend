@@ -62,7 +62,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
         horizontal: 'right',
     });
     const [isSaving, save] = React.useState(false);
-    const [isEdit, setEdit] = React.useState(false);
+    const [isEdit, setEdit] = React.useState<number[]>([]);
 
     const [isDeleting, setDeleteState] = React.useState<boolean>(false);
 
@@ -215,6 +215,8 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
 
         const saveButton = document.getElementById(`save-${index}-button`) as HTMLButtonElement;
         const divForm = document.getElementById(`form-div${index}`) as HTMLDivElement;
+        const fieldset = document.getElementById(`fieldset-${index}`) as HTMLFieldSetElement;
+
         if(!saveButton){
             return;
         }
@@ -247,6 +249,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
             console.log('response', data);
             save(false);
             if (success && code === 201) {
+                fieldset.disabled = true;
                 saveButton.disabled = false;
                 divForm.className = "saveForm w-full my-4 rounded-md border border-[#CBCBCB] shadow-lg bg-white h-auto p-4";
 
@@ -281,13 +284,16 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
         });
     }
     const onClickEditButtonHandler = async(index : number) =>{
-        setEdit(true);
+        setEdit((prev) => [...prev, index]);
         const divForm = document.getElementById(`form-div${index}`) as HTMLDivElement;
+        const fieldset = document.getElementById(`fieldset-${index}`) as HTMLFieldSetElement;
         divForm.classList.remove("saveForm");
+        fieldset.disabled = false;
     }
+
     const onEditPartnerHandler = async(index : number) => {
         const divForm = document.getElementById(`form-div${index}`) as HTMLDivElement;
-        
+        const fieldset = document.getElementById(`fieldset-${index}`) as HTMLFieldSetElement;
 
         const savePartnerObj: Partial<CreateBusinessNameRegPartnerType> = {
             firstName: getValues(`values.${index}.firstName`),//data?.firstName,
@@ -317,9 +323,11 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
             const { data, success, message, code } = res.data;
             console.log('response', data);
             save(false);
-            setEdit(false);
             if (success && code === 200) {
+                fieldset.disabled = true;
                 divForm.className = "saveForm w-full my-4 rounded-md border border-[#CBCBCB] shadow-lg bg-white h-auto p-4";
+                //remove the successfully edited forms from the array edited array 
+                setEdit((prev) => prev.filter((values : number) => values !== index));
                 //isRequestSuccessful((prev) => [...prev, index]);
             }
             
@@ -327,7 +335,6 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
         })
         .catch((err : AxiosError) => {
             save(false);
-            setEdit(false);
             if(err.isAxiosError){
                 if (!err?.response?.data) {
                     alert(err.message);
@@ -430,335 +437,337 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                         id={`form-div${index}`}
                         className="w-full my-4 rounded-md border border-[#CBCBCB] shadow-lg bg-white h-auto p-4">
                         <p className="text-xl font-bold py-4">Individual&nbsp;Business&nbsp;Owner</p>
-                        {/* names */}
-                        <div className='w-full flex flex-col md:flex-row gap-4 text-xs text-black'>
-                            <div className='flex flex-col md:w-1/3 w-full'>
-                                <p className='font-bold'>First&nbsp;Name</p>
-                                <input
-                                    type="text"
-                                    className='text-sm py-2 px-4 rounded-md border border-[#CBCBCB] w-full'
-                                    id={`input-${index}`}
-                                    {...register(`values.${index}.firstName`, { required: true })}
-                                />
-                            </div>
+                        <fieldset id={`fieldset-${index}`}>
+                            {/* names */}
+                            <div className='w-full flex flex-col md:flex-row gap-4 text-xs text-black'>
+                                <div className='flex flex-col md:w-1/3 w-full'>
+                                    <p className='font-bold'>First&nbsp;Name</p>
+                                    <input
+                                        type="text"
+                                        className='text-sm py-2 px-4 rounded-md border border-[#CBCBCB] w-full'
+                                        id={`input-${index}`}
+                                        {...register(`values.${index}.firstName`, { required: true })}
+                                    />
+                                </div>
 
-                            <div className='flex flex-col md:w-1/3 w-full'>
-                                <p className='font-bold'>Last&nbsp;Name</p>
+                                <div className='flex flex-col md:w-1/3 w-full'>
+                                    <p className='font-bold'>Last&nbsp;Name</p>
+                                    <input
+                                        type="text"
+                                        className='text-sm py-2 px-4 rounded-md border border-[#CBCBCB] w-full'
+                                        id={`input-${index}`}
+                                        {...register(`values.${index}.lastName`, { required: true })}
+                                    />
+                                </div>
+                                <div className='flex flex-col md:w-1/3 w-full'>
+                                    <p className='font-bold'>Other&nbsp;Name</p>
+                                    <input
+                                        type="text"
+                                        className='py-2 text-sm  px-4 rounded-md border border-[#CBCBCB] w-full'
+                                        id={`input-${index}`}
+                                        {...register(`values.${index}.otherName`, { required: false })}
+                                    />
+                                </div>
+                            </div>
+                            {/* residential address */}
+                            <div className='flex flex-col w-full text-xs text-black my-4'>
+                                <p className='font-bold'>Residential&nbsp;Address</p>
                                 <input
                                     type="text"
-                                    className='text-sm py-2 px-4 rounded-md border border-[#CBCBCB] w-full'
-                                    id={`input-${index}`}
-                                    {...register(`values.${index}.lastName`, { required: true })}
-                                />
-                            </div>
-                            <div className='flex flex-col md:w-1/3 w-full'>
-                                <p className='font-bold'>Other&nbsp;Name</p>
-                                <input
-                                    type="text"
-                                    className='py-2 text-sm  px-4 rounded-md border border-[#CBCBCB] w-full'
-                                    id={`input-${index}`}
-                                    {...register(`values.${index}.otherName`, { required: false })}
-                                />
-                            </div>
-                        </div>
-                        {/* residential address */}
-                        <div className='flex flex-col w-full text-xs text-black my-4'>
-                            <p className='font-bold'>Residential&nbsp;Address</p>
-                            <input
-                                type="text"
-                                className='py-2 text-sm px-4 rounded-md border border-[#CBCBCB] w-full'
-                                id={`input-${index}`}
-                                {...register(`values.${index}.residentialAddress`, { required: true })}
-                            />
-                        </div>
-
-                        {/* location details*/}
-                        <div className='w-full flex flex-col md:flex-row gap-4 text-xs text-black'> 
-                            <div className='flex flex-col md:w-1/3 w-full'>
-                                <p className='font-bold'>State</p>
-                                <select
-                                    className='w-full border border-[#CBCBCB] py-2 px-3 rounded-md'
-                                    id={`select-${index}`}
-                                    {...register(`values.${index}.state`, {
-                                        required: true,
-                                        //onChange : (e) => dispatch(setStateIdData(e.target.value))
-                                    })}
-                                >
-                                    <option value="state">Select State</option>
-                                    {stateSelector && stateSelector?.map((state: any, i: number) =>
-                                        <option value={state.id} key={i}
-                                            onClick={() => dispatch(addLgaData(state.lgasForThisState))}>
-                                            {state.name}
-                                        </option>
-                                    )}
-                                </select>
-                            </div>
-
-                            <div className='flex flex-col md:w-1/3 w-full'>
-                                <p className='font-bold'>LGA</p>
-                                <select
-                                    //name="lga" 
-                                    className='w-full border border-[#CBCBCB] py-2 px-3 rounded-md'
-                                    id={`select-${index}`}
-                                    //onChange={(e) => console.log(e.target.value)}
-                                    {...register(`values.${index}.lga`, { required: true })}
-                                >
-                                    <option value="LGA">Select LGA</option>
-                                    <option value="LGA">Vandekya</option>
-                                    <option value="LGA">Bende</option>
-                                    {/* {lgaSelector && lgaSelector?.map((lga: any, i: number) =>
-                                        <option value={lga.id} key={i}>
-                                            {lga.name}
-                                        </option>
-                                    )} */}
-                                </select>
-                            </div>
-                            <div className='flex flex-col md:w-1/3 w-full'>
-                                <p className='font-bold'>City</p>
-                                <input
-                                    type="text"
-                                    id={`input-${index}`}
-                                    //name='city'
-                                    className='py-2 text-sm  px-4 rounded-md border border-[#CBCBCB] w-full'
-                                    //onChange={(e) => onChangeTextHandler(e, index)}
-                                    {...register(`values.${index}.city`, { required: true })}
-                                />
-                            </div>
-                        </div>
-                        {/* occupation and nationality */}
-                        <div className='w-full md:w-[66%] flex flex-col md:flex-row gap-4 text-xs text-black my-4'>
-                            <div className='flex flex-col md:w-1/2 w-full'>
-                                <p className='font-bold'>Occupation</p>
-                                <input
-                                    type={"text"}
-                                    id={`input-${index}`}
-                                    className='text-sm py-2 px-4 rounded-md border border-[#CBCBCB] w-full'
-                                    // name="occupation"
-                                    // onChange={(e) => onChangeTextHandler(e, index)}
-                                    {...register(`values.${index}.occupation`, { required: true })}
-                                />
-                            </div>
-                            <div className='flex flex-col md:w-1/2 w-full'>
-                                <p className='font-bold'>Nationality</p>
-                                <input
-                                    type="text"
-                                    id={`input-${index}`}
                                     className='py-2 text-sm px-4 rounded-md border border-[#CBCBCB] w-full'
-                                    // name='nationality'
-                                    // onChange={(e) => onChangeTextHandler(e, index)}
-                                    {...register(`values.${index}.nationality`, { required: true })}
+                                    id={`input-${index}`}
+                                    {...register(`values.${index}.residentialAddress`, { required: true })}
                                 />
                             </div>
-                        </div>
-                        {/* Email, telephone and date of birth */}
-                        <div className='w-full flex flex-col md:flex-row gap-4 text-xs text-black mb-4'>
 
-                            <div className='flex flex-col md:w-1/3 w-full'>
-                                <p className='font-bold'>Date&nbsp;Of&nbsp;Birth</p>
-                                <div className='w-full flex flex-row items-center gap-2 text-[#303030]'>
+                            {/* location details*/}
+                            <div className='w-full flex flex-col md:flex-row gap-4 text-xs text-black'> 
+                                <div className='flex flex-col md:w-1/3 w-full'>
+                                    <p className='font-bold'>State</p>
                                     <select
-                                        //name="day"
+                                        className='w-full border border-[#CBCBCB] py-2 px-3 rounded-md'
                                         id={`select-${index}`}
-                                        className='w-1/3 border border-[#CBCBCB] py-2 px-3 rounded-md'
-                                        {...register(`values.${index}.day`, { required: true })}
+                                        {...register(`values.${index}.state`, {
+                                            required: true,
+                                            //onChange : (e) => dispatch(setStateIdData(e.target.value))
+                                        })}
                                     >
-                                        <option value="day">Day</option>
-                                        {DaysArray.map((day: number, i: number) =>
-                                            <option value={day} key={i}>{day < 10 ? `0${day}` : day}</option>
-                                        )}
-                                    </select>
-                                    <select
-                                        //name="month"
-                                        id={`se;ect-${index}`}
-                                        className='w-1/3 border border-[#CBCBCB] py-2 px-3 rounded-md'
-                                        {...register(`values.${index}.month`, { required: true })}
-                                    >
-                                        <option value="month">Month</option>
-                                        {MonthsArray.map((month: string, i: number) =>
-                                            <option value={month} key={i}>{month}</option>
-                                        )}
-                                    </select>
-                                    <select
-                                        //name="year" 
-                                        id={`select-${index}`}
-                                        className='w-1/3 border border-[#CBCBCB] py-2 px-3 rounded-md'
-                                        {...register(`values.${index}.year`, { required: true })}
-                                    >
-                                        <option value="year">Year</option>
-                                        {Years.map((year: number, i: number) =>
-                                            <option value={year} key={i}>{year}</option>
+                                        <option value="state">Select State</option>
+                                        {stateSelector && stateSelector?.map((state: any, i: number) =>
+                                            <option value={state.id} key={i}
+                                                onClick={() => dispatch(addLgaData(state.lgasForThisState))}>
+                                                {state.name}
+                                            </option>
                                         )}
                                     </select>
                                 </div>
-                            </div>
-                            <div className='flex flex-col md:w-1/3 w-full'>
-                                <p className='font-bold'>E-mail&nbsp;Address</p>
-                                <input
-                                    type={"email"}
-                                    id={`input-${index}`}
-                                    className='text-sm py-2 px-4 rounded-md border border-[#CBCBCB] w-full'
-                                    // name='email'
-                                    // onChange={(e) => onChangeTextHandler(e, index)}
-                                    {...register(`values.${index}.email`, {
-                                        required: true,
-                                        validate: () => validateEmail(getValues(`values.${index}.email`))
-                                    })}
-                                />
-                            </div>
-                            <div className='flex flex-col md:w-1/3 w-full'>
-                                <p className='font-bold'>Telephone&nbsp;Number</p>
-                                <input
-                                    type={"text"}
-                                    id={`input-${index}`}
-                                    className='py-2 text-sm px-4 rounded-md border border-[#CBCBCB] w-full'
-                                    maxLength={11}
-                                    // name='telephoneNumber' 
-                                    // onChange={(e) => onChangeTextHandler(e, index)}
-                                    {...register(`values.${index}.telephoneNumber`, { required: true, maxLength: 11 })}
-                                />
-                            </div>
-                        </div>
-                        {/* files */}
-                        <div
-                            className="flex flex-col gap-1 w-full my-4">
-                            <div className="flex justify-between gap-2 items-center py-2 px-4 bg-[#DFDDEC] text-xs text-black font-semibold rounded">
-                                <p>Signature:</p>
-                                <input
-                                    type="file"
-                                    accept=".jpg,.jpeg,.png"
-                                    className='hidden'
-                                    id={`signature-${index}`}
-                                    {...register(`values.${index}.signature`, {
-                                        required: true, 
-                                        onChange: async (e) => {
-                                            const key = `values.${index}.signature`;
 
-                                            await uploadPartnerAttachment((getValues(key) as FileList), key);
+                                <div className='flex flex-col md:w-1/3 w-full'>
+                                    <p className='font-bold'>LGA</p>
+                                    <select
+                                        //name="lga" 
+                                        className='w-full border border-[#CBCBCB] py-2 px-3 rounded-md'
+                                        id={`select-${index}`}
+                                        //onChange={(e) => console.log(e.target.value)}
+                                        {...register(`values.${index}.lga`, { required: true })}
+                                    >
+                                        <option value="LGA">Select LGA</option>
+                                        <option value="LGA">Vandekya</option>
+                                        <option value="LGA">Bende</option>
+                                        {/* {lgaSelector && lgaSelector?.map((lga: any, i: number) =>
+                                            <option value={lga.id} key={i}>
+                                                {lga.name}
+                                            </option>
+                                        )} */}
+                                    </select>
+                                </div>
+                                <div className='flex flex-col md:w-1/3 w-full'>
+                                    <p className='font-bold'>City</p>
+                                    <input
+                                        type="text"
+                                        id={`input-${index}`}
+                                        //name='city'
+                                        className='py-2 text-sm  px-4 rounded-md border border-[#CBCBCB] w-full'
+                                        //onChange={(e) => onChangeTextHandler(e, index)}
+                                        {...register(`values.${index}.city`, { required: true })}
+                                    />
+                                </div>
+                            </div>
+                            {/* occupation and nationality */}
+                            <div className='w-full md:w-[66%] flex flex-col md:flex-row gap-4 text-xs text-black my-4'>
+                                <div className='flex flex-col md:w-1/2 w-full'>
+                                    <p className='font-bold'>Occupation</p>
+                                    <input
+                                        type={"text"}
+                                        id={`input-${index}`}
+                                        className='text-sm py-2 px-4 rounded-md border border-[#CBCBCB] w-full'
+                                        // name="occupation"
+                                        // onChange={(e) => onChangeTextHandler(e, index)}
+                                        {...register(`values.${index}.occupation`, { required: true })}
+                                    />
+                                </div>
+                                <div className='flex flex-col md:w-1/2 w-full'>
+                                    <p className='font-bold'>Nationality</p>
+                                    <input
+                                        type="text"
+                                        id={`input-${index}`}
+                                        className='py-2 text-sm px-4 rounded-md border border-[#CBCBCB] w-full'
+                                        // name='nationality'
+                                        // onChange={(e) => onChangeTextHandler(e, index)}
+                                        {...register(`values.${index}.nationality`, { required: true })}
+                                    />
+                                </div>
+                            </div>
+                            {/* Email, telephone and date of birth */}
+                            <div className='w-full flex flex-col md:flex-row gap-4 text-xs text-black mb-4'>
+
+                                <div className='flex flex-col md:w-1/3 w-full'>
+                                    <p className='font-bold'>Date&nbsp;Of&nbsp;Birth</p>
+                                    <div className='w-full flex flex-row items-center gap-2 text-[#303030]'>
+                                        <select
+                                            //name="day"
+                                            id={`select-${index}`}
+                                            className='w-1/3 border border-[#CBCBCB] py-2 px-3 rounded-md'
+                                            {...register(`values.${index}.day`, { required: true })}
+                                        >
+                                            <option value="day">Day</option>
+                                            {DaysArray.map((day: number, i: number) =>
+                                                <option value={day} key={i}>{day < 10 ? `0${day}` : day}</option>
+                                            )}
+                                        </select>
+                                        <select
+                                            //name="month"
+                                            id={`se;ect-${index}`}
+                                            className='w-1/3 border border-[#CBCBCB] py-2 px-3 rounded-md'
+                                            {...register(`values.${index}.month`, { required: true })}
+                                        >
+                                            <option value="month">Month</option>
+                                            {MonthsArray.map((month: string, i: number) =>
+                                                <option value={month} key={i}>{month}</option>
+                                            )}
+                                        </select>
+                                        <select
+                                            //name="year" 
+                                            id={`select-${index}`}
+                                            className='w-1/3 border border-[#CBCBCB] py-2 px-3 rounded-md'
+                                            {...register(`values.${index}.year`, { required: true })}
+                                        >
+                                            <option value="year">Year</option>
+                                            {Years.map((year: number, i: number) =>
+                                                <option value={year} key={i}>{year}</option>
+                                            )}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className='flex flex-col md:w-1/3 w-full'>
+                                    <p className='font-bold'>E-mail&nbsp;Address</p>
+                                    <input
+                                        type={"email"}
+                                        id={`input-${index}`}
+                                        className='text-sm py-2 px-4 rounded-md border border-[#CBCBCB] w-full'
+                                        // name='email'
+                                        // onChange={(e) => onChangeTextHandler(e, index)}
+                                        {...register(`values.${index}.email`, {
+                                            required: true,
+                                            validate: () => validateEmail(getValues(`values.${index}.email`))
+                                        })}
+                                    />
+                                </div>
+                                <div className='flex flex-col md:w-1/3 w-full'>
+                                    <p className='font-bold'>Telephone&nbsp;Number</p>
+                                    <input
+                                        type={"text"}
+                                        id={`input-${index}`}
+                                        className='py-2 text-sm px-4 rounded-md border border-[#CBCBCB] w-full'
+                                        maxLength={11}
+                                        // name='telephoneNumber' 
+                                        // onChange={(e) => onChangeTextHandler(e, index)}
+                                        {...register(`values.${index}.telephoneNumber`, { required: true, maxLength: 11 })}
+                                    />
+                                </div>
+                            </div>
+                            {/* files */}
+                            <div
+                                className="flex flex-col gap-1 w-full my-4">
+                                <div className="flex justify-between gap-2 items-center py-2 px-4 bg-[#DFDDEC] text-xs text-black font-semibold rounded">
+                                    <p>Signature:</p>
+                                    <input
+                                        type="file"
+                                        accept=".jpg,.jpeg,.png"
+                                        className='hidden'
+                                        id={`signature-${index}`}
+                                        {...register(`values.${index}.signature`, {
+                                            required: true, 
+                                            onChange: async (e) => {
+                                                const key = `values.${index}.signature`;
+
+                                                await uploadPartnerAttachment((getValues(key) as FileList), key);
+                                            }
                                         }
+                                        )}
+                                    />
+                                    <div className='text-black'>{getValues(`values.${index}.signature`)[0]?.name}</div>
+
+                                    {!getValues(`values.${index}.signature`)[0]?.name ?
+                                        <div className='cursor-pointer hover:text-[#1976D2] w-fit flex flex-row items-center gap-1'
+                                            onClick={() => {
+                                                document.getElementById(`signature-${index}`)?.click();
+                                            }}>
+                                            <FileUploadOutlinedIcon sx={{ fontSize: '18px' }} />
+                                            <p>Upload</p>
+                                        </div>
+                                        :
+                                        <div className='cursor-pointer text-[#FF2D2D] w-fit flex flex-row items-center gap-1'
+                                            onClick={() => emptyFileInputField(`signature-${index}`, index)}>
+                                            <object data="/delete.png" className='w-4 h-4 object-contain' />
+                                            <p>Delete</p>
+                                        </div>
                                     }
-                                    )}
-                                />
-                                <div className='text-black'>{getValues(`values.${index}.signature`)[0]?.name}</div>
+                                </div>
+                                <div className="flex justify-between gap-2 items-center py-2 px-4 bg-[#FFFAFA] text-xs text-black font-semibold rounded">
+                                    <input
+                                        type="file" accept=".jpg,.jpeg,.png"
+                                        className='hidden'
+                                        id={`passport-${index}`} 
+                                        {...register(`values.${index}.passport`, { 
+                                            required: true,
+                                            onChange: async (e) => {
+                                                const key = `values.${index}.passport`;
+                                                onChangeFileNamesHandler('passport',index, getValues(key)[0]?.name);
+                                                await uploadPartnerAttachment((getValues(key) as FileList), key);
+                                            }
+                                        })} />
 
-                                {!getValues(`values.${index}.signature`)[0]?.name ?
-                                    <div className='cursor-pointer hover:text-[#1976D2] w-fit flex flex-row items-center gap-1'
-                                        onClick={() => {
-                                            document.getElementById(`signature-${index}`)?.click();
-                                        }}>
-                                        <FileUploadOutlinedIcon sx={{ fontSize: '18px' }} />
-                                        <p>Upload</p>
-                                    </div>
-                                    :
-                                    <div className='cursor-pointer text-[#FF2D2D] w-fit flex flex-row items-center gap-1'
-                                        onClick={() => emptyFileInputField(`signature-${index}`, index)}>
-                                        <object data="/delete.png" className='w-4 h-4 object-contain' />
-                                        <p>Delete</p>
-                                    </div>
-                                }
+                                    <p>Photograph&nbsp;Photograph:</p>
+
+                                    <div className='text-black'>{fileNames.at(index)?.passport}</div>
+                                    {!fileNames.at(index)?.passport ?
+                                        <div className='cursor-pointer hover:text-[#1976D2] w-fit flex flex-row items-center gap-1'
+                                            onClick={() => {
+                                                document.getElementById(`passport-${index}`)?.click();
+                                            }}>
+                                            <FileUploadOutlinedIcon sx={{ fontSize: '18px' }} />
+                                            <p>Upload</p>
+                                        </div>
+                                        :
+                                        <div className='cursor-pointer text-[#FF2D2D] w-fit flex flex-row items-center gap-1'
+                                            onClick={() => onChangeFileNamesHandler('passport',index, '')}>
+                                            <object data="/delete.png" className='w-4 h-4 object-contain' />
+                                            <p>Delete</p>
+                                        </div>
+                                    }
+                                </div>
+                                <div className="flex justify-between gap-2 items-center py-2 px-4 bg-[#DFDDEC] text-xs text-black font-semibold rounded">
+                                    <input
+                                        type="file"
+                                        accept=".jpg,.jpeg,.png"
+                                        className='hidden'
+                                        id={`meansOfId-${index}`}
+                                        {...register(`values.${index}.meansOfId`, { 
+                                            required: true,
+                                            onChange: async (e) => {
+                                                const key = `values.${index}.meansOfId`;
+                                                await uploadPartnerAttachment((getValues(key) as FileList), key);
+                                            }
+                                        })}
+                                    />
+                                    <p>Means&nbsp;Of&nbsp;Identification:</p>
+                                    <div className='text-black'>{getValues(`values.${index}.meansOfId`)[0]?.name}</div>
+                                    {!getValues(`values.${index}.meansOfId`)[0]?.name ?
+                                        <div className='cursor-pointer hover:text-[#1976D2] w-fit flex flex-row items-center gap-1'
+                                            onClick={() => {
+                                                document.getElementById(`meansOfId-${index}`)?.click();
+                                            }}>
+                                            <FileUploadOutlinedIcon sx={{ fontSize: '18px' }} />
+                                            <p>Upload</p>
+                                        </div>
+                                        :
+                                        <div className='cursor-pointer text-[#FF2D2D] w-fit flex flex-row items-center gap-1'
+                                            onClick={() => emptyFileInputField(`meansOfId-${index}`, index)}>
+                                            <object data="/delete.png" className='w-4 h-4 object-contain' />
+                                            <p>Delete</p>
+                                        </div>
+                                    }
+                                </div>
+
+                                <div className="flex justify-between gap-2 
+                                items-center py-2 px-4 bg-[#FFFAFA] 
+                                text-xs text-black 
+                                font-semibold rounded">
+                                    <input
+                                        type="file"
+                                        accept=".jpg,.jpeg,.png"
+                                        className='hidden'
+                                        id={`certificate-${index}`}
+                                        {...register(`values.${index}.certificate`, { 
+                                            required: true,
+                                            onChange: async (e) => {
+                                                const key = `values.${index}.certificate`;
+                                                await uploadPartnerAttachment((getValues(key) as FileList), key);
+                                            }
+                                        })}
+                                    />
+                                    <p>Certificate&nbsp;Of&nbsp;Competence:</p>
+
+                                    <div className='text-black'>{getValues(`values.${index}.certificate`)[0]?.name}</div>
+                                    {!getValues(`values.${index}.certificate`)[0]?.name ?
+                                        <div className='cursor-pointer hover:text-[#1976D2] w-fit flex flex-row items-center gap-1'
+                                            onClick={() => {
+                                                document.getElementById(`certificate-${index}`)?.click();
+                                            }}>
+                                            <FileUploadOutlinedIcon sx={{ fontSize: '18px' }} />
+                                            <p>Upload</p>
+                                        </div>
+                                        :
+                                        <div className='cursor-pointer text-[#FF2D2D] w-fit flex flex-row items-center gap-1'
+                                            onClick={() => emptyFileInputField(`certificate-${index}`, index)}>
+                                            <object data="/delete.png" className='w-4 h-4 object-contain' />
+                                            <p>Delete</p>
+                                        </div>
+                                    }
+                                </div>
                             </div>
-                            <div className="flex justify-between gap-2 items-center py-2 px-4 bg-[#FFFAFA] text-xs text-black font-semibold rounded">
-                                <input
-                                    type="file" accept=".jpg,.jpeg,.png"
-                                    className='hidden'
-                                    id={`passport-${index}`} 
-                                    {...register(`values.${index}.passport`, { 
-                                        required: true,
-                                        onChange: async (e) => {
-                                            const key = `values.${index}.passport`;
-                                            onChangeFileNamesHandler('passport',index, getValues(key)[0]?.name);
-                                            await uploadPartnerAttachment((getValues(key) as FileList), key);
-                                        }
-                                    })} />
-
-                                <p>Photograph&nbsp;Photograph:</p>
-
-                                <div className='text-black'>{fileNames.at(index)?.passport}</div>
-                                {!fileNames.at(index)?.passport ?
-                                    <div className='cursor-pointer hover:text-[#1976D2] w-fit flex flex-row items-center gap-1'
-                                        onClick={() => {
-                                            document.getElementById(`passport-${index}`)?.click();
-                                        }}>
-                                        <FileUploadOutlinedIcon sx={{ fontSize: '18px' }} />
-                                        <p>Upload</p>
-                                    </div>
-                                    :
-                                    <div className='cursor-pointer text-[#FF2D2D] w-fit flex flex-row items-center gap-1'
-                                        onClick={() => onChangeFileNamesHandler('passport',index, '')}>
-                                        <object data="/delete.png" className='w-4 h-4 object-contain' />
-                                        <p>Delete</p>
-                                    </div>
-                                }
-                            </div>
-                            <div className="flex justify-between gap-2 items-center py-2 px-4 bg-[#DFDDEC] text-xs text-black font-semibold rounded">
-                                <input
-                                    type="file"
-                                    accept=".jpg,.jpeg,.png"
-                                    className='hidden'
-                                    id={`meansOfId-${index}`}
-                                    {...register(`values.${index}.meansOfId`, { 
-                                        required: true,
-                                        onChange: async (e) => {
-                                            const key = `values.${index}.meansOfId`;
-                                            await uploadPartnerAttachment((getValues(key) as FileList), key);
-                                        }
-                                    })}
-                                />
-                                <p>Means&nbsp;Of&nbsp;Identification:</p>
-                                <div className='text-black'>{getValues(`values.${index}.meansOfId`)[0]?.name}</div>
-                                {!getValues(`values.${index}.meansOfId`)[0]?.name ?
-                                    <div className='cursor-pointer hover:text-[#1976D2] w-fit flex flex-row items-center gap-1'
-                                        onClick={() => {
-                                            document.getElementById(`meansOfId-${index}`)?.click();
-                                        }}>
-                                        <FileUploadOutlinedIcon sx={{ fontSize: '18px' }} />
-                                        <p>Upload</p>
-                                    </div>
-                                    :
-                                    <div className='cursor-pointer text-[#FF2D2D] w-fit flex flex-row items-center gap-1'
-                                        onClick={() => emptyFileInputField(`meansOfId-${index}`, index)}>
-                                        <object data="/delete.png" className='w-4 h-4 object-contain' />
-                                        <p>Delete</p>
-                                    </div>
-                                }
-                            </div>
-
-                            <div className="flex justify-between gap-2 
-                            items-center py-2 px-4 bg-[#FFFAFA] 
-                            text-xs text-black 
-                            font-semibold rounded">
-                                <input
-                                    type="file"
-                                    accept=".jpg,.jpeg,.png"
-                                    className='hidden'
-                                    id={`certificate-${index}`}
-                                    {...register(`values.${index}.certificate`, { 
-                                        required: true,
-                                        onChange: async (e) => {
-                                            const key = `values.${index}.certificate`;
-                                            await uploadPartnerAttachment((getValues(key) as FileList), key);
-                                        }
-                                    })}
-                                />
-                                <p>Certificate&nbsp;Of&nbsp;Competence:</p>
-
-                                <div className='text-black'>{getValues(`values.${index}.certificate`)[0]?.name}</div>
-                                {!getValues(`values.${index}.certificate`)[0]?.name ?
-                                    <div className='cursor-pointer hover:text-[#1976D2] w-fit flex flex-row items-center gap-1'
-                                        onClick={() => {
-                                            document.getElementById(`certificate-${index}`)?.click();
-                                        }}>
-                                        <FileUploadOutlinedIcon sx={{ fontSize: '18px' }} />
-                                        <p>Upload</p>
-                                    </div>
-                                    :
-                                    <div className='cursor-pointer text-[#FF2D2D] w-fit flex flex-row items-center gap-1'
-                                        onClick={() => emptyFileInputField(`certificate-${index}`, index)}>
-                                        <object data="/delete.png" className='w-4 h-4 object-contain' />
-                                        <p>Delete</p>
-                                    </div>
-                                }
-                            </div>
-                        </div>
+                        </fieldset>
                         <div className='flex justify-end text-white'>
                             {!getSavedForm(index).includes(index) ?
                                 <button
@@ -783,10 +792,10 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                         disabled:bg-[#EFF0F6] 
                                         disabled:shadow-none 
                                         disabled:text-gray-500 disabled:cursor-default'
-                                        onClick={() => isEdit ? onEditPartnerHandler(index) : onClickEditButtonHandler(index)}
+                                        onClick={() => isEdit.includes(index) ? onEditPartnerHandler(index) : onClickEditButtonHandler(index)}
                                     >
                                         <object data="/delete.svg" className='w-4 h-4  object-contain' />
-                                        {isEdit ? "Save Changes" : "Edit"}
+                                        {isEdit.includes(index) ? "Save Changes" : "Edit"}
                                     </button>
                                     <button
                                         className='bg-[#FF2D2D] rounded-md
