@@ -126,7 +126,6 @@ export const NameRegistrationFormComponent = () : JSX.Element => {
     }
 
     React.useEffect(() => {
-        
         const firstNameSuggestion : string = getValues(`values.firstNameSuggestion`) as string;
         const secondNameSuggestion : string = getValues(`values.secondNameSuggestion`) as string;
         const businessAddress : string = getValues(`values.businessAddress`) as string;
@@ -176,7 +175,7 @@ export const NameRegistrationFormComponent = () : JSX.Element => {
                 })
             }}
             >
-                <fieldset id="feildset">
+                <fieldset id='fieldset'>
                     <div className='w-full flex flex-col md:flex-row gap-4 text-xs text-black'>
                         <div className='flex flex-col md:w-1/2 w-full'>
                             <p className='font-bold'>Name&nbsp;Suggestion&nbsp;1</p>
