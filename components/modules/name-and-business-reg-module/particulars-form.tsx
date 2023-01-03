@@ -495,7 +495,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                             //onChange : (e) => dispatch(setStateIdData(e.target.value))
                                         })}
                                     >
-                                        <option value="state">Select State</option>
+                                        <option value="state" selected>Select State</option>
                                         {stateSelector && stateSelector?.map((state: any, i: number) =>
                                             <option value={state.id} key={i}
                                                 onClick={() => dispatch(addLgaData(state.lgasForThisState))}>
@@ -512,7 +512,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                         id={`select-${index}`}
                                         {...register(`values.${index}.lga`, { required: true })}
                                     >
-                                        <option value="LGA">Select LGA</option>
+                                        <option value="LGA" selected>Select LGA</option>
                                         <option value="LGA">Vandekya</option>
                                         <option value="LGA">Bende</option>
                                         {/* {lgaSelector && lgaSelector?.map((lga: any, i: number) =>
@@ -569,7 +569,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                             className='w-1/3 border border-[#CBCBCB] py-2 px-3 rounded-md'
                                             {...register(`values.${index}.day`, { required: true })}
                                         >
-                                            <option value="day">Day</option>
+                                            <option value="day" selected>Day</option>
                                             {DaysArray.map((day: number, i: number) =>
                                                 <option value={day} key={i}>{day < 10 ? `0${day}` : day}</option>
                                             )}
@@ -580,7 +580,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                             className='w-1/3 border border-[#CBCBCB] py-2 px-3 rounded-md'
                                             {...register(`values.${index}.month`, { required: true })}
                                         >
-                                            <option value="month">Month</option>
+                                            <option value="month" selected>Month</option>
                                             {MonthsArray.map((month: string, i: number) =>
                                                 <option value={month} key={i}>{month}</option>
                                             )}
@@ -591,7 +591,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                             className='w-1/3 border border-[#CBCBCB] py-2 px-3 rounded-md'
                                             {...register(`values.${index}.year`, { required: true })}
                                         >
-                                            <option value="year">Year</option>
+                                            <option value="year" selected>Year</option>
                                             {Years.map((year: number, i: number) =>
                                                 <option value={year} key={i}>{year}</option>
                                             )}
