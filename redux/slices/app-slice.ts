@@ -25,6 +25,7 @@ export interface AppGlobalState {
 	businessNameRegistration: BusinessNameRegInterface;
 	businessNameRegistrationId: string;
 	nameRegFormIsValid: boolean;
+	isSavedArray: boolean[];
 	//userData : object;
 }
 
@@ -49,6 +50,7 @@ const initialState: AppGlobalState = {
 	},
 	businessNameRegistrationId: '',
 	nameRegFormIsValid: false,
+	isSavedArray: [],
 };
 
 const appDataSlice: Slice<AppGlobalState> = createSlice({
@@ -84,15 +86,13 @@ const appDataSlice: Slice<AppGlobalState> = createSlice({
 		setNameRegFormValidState(state: AppGlobalState, action: any) {
 			state.nameRegFormIsValid = action.payload;
 		},
-		// addUserFirstName(state : AppGlobalState, action : any){
-		//     state.userFirstName = action.payload;
-		// },
-		// addUserLastName(state : AppGlobalState, action : any){
-		//     state.userLastName = action.payload;
-		// },
-		// addUserProfileImage(state : AppGlobalState, action : any){
-		//     state.profileImage = action.payload;
-		// }addUserFirstName, addUserLastName, addUserProfileImage
+		setFormsSaved(state: AppGlobalState, action: any) {
+			if (action.payload === true) {
+				state.isSavedArray.push(action.payload);
+			} else {
+				state.isSavedArray.pop();
+			}
+		},
 	},
 });
 
@@ -106,6 +106,7 @@ export const {
 	setBusinessNameRegData,
 	setBusinessNameRegId,
 	setNameRegFormValidState,
+	setFormsSaved,
 } = appDataSlice.actions;
 
 export default appDataSlice.reducer;

@@ -8,10 +8,10 @@ import { ErrorInterfaceObj } from '../../../utils/constants';
 import { cooperateFormObj, DaysArray, MonthsArray, Years } from '../../../utils/collections';
 import { CooperateFormsComponent } from './cooperate-forms';
 import { useFieldArray, useForm } from 'react-hook-form';
-import { validateEmail } from '../../../utils/util-functions';
+import { customFilter, disableButtons, getAllSavedForms, getFormLength, validateEmail } from '../../../utils/util-functions';
 import { useSelector, useDispatch } from 'react-redux';
 import { AnyAction, Dispatch } from 'redux';
-import { addLgaData, setBusinessNameRegId, setCooperateFieldArrayLength, setIndividualFieldArrayLength, setStateIdData } from '../../../redux/slices/app-slice';
+import { addLgaData, setBusinessNameRegId, setCooperateFieldArrayLength, setFormsSaved, setIndividualFieldArrayLength, setNameRegFormValidState, setStateIdData } from '../../../redux/slices/app-slice';
 import { createBusinessNameRegJob, deleteAxiosRequest, patchAxiosRequestWithHeader, postAxiosRequestWithHeader, postAxiosRequestWithHeaderForBusinessReg, uploadFiles } from '../../../utils/axios-requests';
 import { AxiosError } from 'axios';
 import { initialErrorObj } from '../login-module/login-form';
@@ -39,21 +39,12 @@ const partnersObj = {
     certificate: ""
 };
 
-const filesObj = {
-    signature : '',
-    passport : '',
-    meansOfId : '',
-    certificate : ''
-};
-
-
 export const BusinessRegistrationParticularsForm = (): JSX.Element => {
     const [extras, setExtras] = React.useState({
         isCooperateForm: false,
         index: 0
     });
     const [axiosResponse, setAxiosResponse] = React.useState<ErrorInterfaceObj>(initialErrorObj);
-    const [fileNames, setFileNames] = React.useState([filesObj]);
     const [requestStatus, isRequestSuccessful] = React.useState<any[]>([]);
 
     const [state, setState] = React.useState<any>({
@@ -75,9 +66,9 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
     const getNameRegObjectSelector = useSelector((state: any) => state.store.businessNameRegistration);
     const getNameRegIdSelector = useSelector((state: any) => state.store.businessNameRegistrationId);
     const isValidBusinessForm = useSelector((state : any) => state.store.nameRegFormIsValid);
-
+    const isSavedArraySelector = useSelector((state : any) => state.store.isSavedArray);
     const dispatch: Dispatch<AnyAction> = useDispatch();
-
+    
     const {
         register,
         formState: { isValid, isSubmitting, isSubmitSuccessful },
@@ -86,37 +77,35 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
         setError,
         setValue,
         getValues,
-        watch
+        watch,
+        reset
     } = useForm<any>({
         // defaultValues: {}; you can populate the fields by this attribute 
     });
     const watchAllInputFields = watch();
-    const { fields, append } = useFieldArray<any>({
+    const { fields, append , remove} = useFieldArray<any>({
         control,
         name: "values",
     });
-    const { fields: fieldsArray, append: appendToCooperate } = useFieldArray<any>({
+    const { fields: fieldsArray, append: appendToCooperate, remove : removeFromCooperate} = useFieldArray<any>({
         control,
         name: "cooperate"
     });
 
-    console.log({savedPartnerId});
-
-    const getSavedForm = (index : number) => {
-        //get index of saved partners
-        return requestStatus.filter((i:number) => index === i);
-    }
-
-    const uploadPartnerAttachment = async (fileList: FileList, key: string): Promise<string[]> => {
-        //const saveButton = document.getElementById(`save-${index}-button`) as HTMLButtonElement;
+    const uploadPartnerAttachment = async (
+        e:React.ChangeEvent<HTMLInputElement>,
+        fileList: FileList,
+        key: string, 
+        index : number
+        ): Promise<string[]> => {
         try {
-            //if(saveButton) saveButton.disabled = true;
             const file = fileList.item(0);
+
             if (file) {
                 const uploadedFileResponse = await uploadFiles([file]);
                 if (uploadedFileResponse?.success) {
                     const [uploadedFile] = uploadedFileResponse.data;
-                    setValue(key, uploadedFile);
+                    setValue(key, uploadedFile.concat(`#${file.name}`));
                 }
                 return uploadedFileResponse.data ?? [];
             }
@@ -133,18 +122,29 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
     
     const addCooperateForm = async () => {
         const form = document.getElementById('form-id') as HTMLFormElement;
+<<<<<<< HEAD
         const fieldset = document.getElementById('fieldset') as HTMLFieldSetElement;
 
+=======
+<<<<<<< HEAD
+        const fieldset = document.getElementById('fieldset') as HTMLFieldSetElement;
+
+=======
+        const fieldset = document.getElementById('feildset') as HTMLFieldSetElement;
+>>>>>>> 492991e0c513d32866ba65f8f3e7ee9b4ae94cea
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
         if(getNameRegIdSelector !== ''){
             appendToCooperate(cooperateFormObj);
             dispatch(setCooperateFieldArrayLength(fieldsArray.length));
             return;
         }
+        dispatch(setNameRegFormValidState(false));
         await createBusinessNameRegJob({
             businessNameRegDetails: { ...getNameRegObjectSelector }
         }).then((res) => {
             const {data : {data, success, code}} = res;
             if(success && data?.businessNameRegistrationId){
+                dispatch(setNameRegFormValidState(true));
                 appendToCooperate(cooperateFormObj);
                 dispatch(setCooperateFieldArrayLength(fieldsArray.length));
                 dispatch(setBusinessNameRegId(data.businessNameRegistrationId));
@@ -153,6 +153,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
             }
         })
         .catch((err : AxiosError) => {
+            dispatch(setNameRegFormValidState(true));
             if(err.isAxiosError){
                 if(!err?.response?.data){
                     alert(err?.message);   
@@ -176,19 +177,22 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
             dispatch(setIndividualFieldArrayLength(fields.length));
             return;
         }
-        dispatch(setIndividualFieldArrayLength(fields.length));
+        dispatch(setNameRegFormValidState(false));
         await createBusinessNameRegJob({
             businessNameRegDetails: { ...getNameRegObjectSelector }
         }).then((res) => {
             const {data : {data, success, code}} = res;
             if(success && data?.businessNameRegistrationId){
+                dispatch(setNameRegFormValidState(true));
                 append(partnersObj);
+                dispatch(setIndividualFieldArrayLength(fields.length));
                 dispatch(setBusinessNameRegId( data.businessNameRegistrationId));
                 form.className = "saveForm my-8";
                 fieldset.disabled = true;
             }
         })
         .catch((err : AxiosError) => {
+            dispatch(setNameRegFormValidState(true));
             if(err.isAxiosError){
                 if(!err?.response?.data){
                     alert(err?.message);   
@@ -202,8 +206,6 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                 },6000);
             }
         });
-        
-        //console.log({getNameRegIdSelector});
     }
     
     const handleClose = () => {
@@ -211,15 +213,21 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
     };
 
     const emptyFileInputField = (elementId: string, index: number) => {
-        setValue(`${elementId}`, '');
+        //setValue(`${elementId}`, '');
         document.getElementById(elementId)?.click();
     }
 
     const onSaveHandler = async (index: number) => {
-
-        const saveButton = document.getElementById(`save-${index}-button`) as HTMLButtonElement;
+        const saveButton = document.getElementById(`save-button-${index}`) as HTMLButtonElement;
         const divForm = document.getElementById(`form-div${index}`) as HTMLDivElement;
         const fieldset = document.getElementById(`fieldset-${index}`) as HTMLFieldSetElement;
+<<<<<<< HEAD
+        const signature = getValues(`values.${index}.signature`).split('#')[0];
+        const passport = getValues(`values.${index}.passport`).split('#')[0];
+        const idCardLink = getValues(`values.${index}.meansOfId`).split('#')[0];
+        const competenceCertificate = getValues(`values.${index}.certificate`).split('#')[0];
+=======
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
 
         if(!saveButton){
             return;
@@ -238,33 +246,29 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
             email: getValues(`values.${index}.email`),//data?.email,
             phoneNumber: getValues(`values.${index}.telephoneNumber`),//data?.telephoneNumber,
             type: "INDIVIDUAL",
-            signature: getValues(`values.${index}.signature`),
-            passport: getValues(`values.${index}.passport`),
-            competenceCertificate: getValues(`values.${index}.certificate`),
-            idCardLink: getValues(`values.${index}.meansOfId`),
+            signature, //: getValues(`values.${index}.signature`),
+            passport, //: getValues(`values.${index}.passport`),
+            competenceCertificate, //: getValues(`values.${index}.certificate`),
+            idCardLink, //getValues(`values.${index}.meansOfId`),
             businessNameRegistrationId: getNameRegIdSelector
         };
-        console.log({savePartnerObj})
         const response = await postAxiosRequestWithHeader({
             uri: 'business-name-registration-partner',
             body: savePartnerObj,
         }).then((res) => {
             const { data, success, message, code } = res.data;
-            console.log('response', data);
             save(false);
             if (success && code === 201) {
                 fieldset.disabled = true;
                 saveButton.disabled = false;
                 divForm.className = "saveForm w-full my-4 rounded-md border border-[#CBCBCB] shadow-lg bg-white h-auto p-4";
-
-                //console.log({key : data?.businessNameRegistration?.registeredPartnersForThsBusiness?.pop()?.id});
+                dispatch(setFormsSaved(true));
                 setPartnerId(
                     (prev) => [...prev, data.id]
                 );
 
                 isRequestSuccessful((prev) => [...prev, index]);
-            }
-            
+            }            
 
         })
         .catch((err : AxiosError) => {
@@ -298,6 +302,14 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
     const onEditPartnerHandler = async(index : number) => {
         const divForm = document.getElementById(`form-div${index}`) as HTMLDivElement;
         const fieldset = document.getElementById(`fieldset-${index}`) as HTMLFieldSetElement;
+<<<<<<< HEAD
+        const signature = getValues(`values.${index}.signature`).split('#')[0];
+        const passport = getValues(`values.${index}.passport`).split('#')[0];
+        const idCardLink = getValues(`values.${index}.meansOfId`).split('#')[0];
+        const competenceCertificate = getValues(`values.${index}.certificate`).split('#')[0];
+
+=======
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
 
         const savePartnerObj: Partial<CreateBusinessNameRegPartnerType> = {
             firstName: getValues(`values.${index}.firstName`),//data?.firstName,
@@ -312,10 +324,10 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
             email: getValues(`values.${index}.email`),//data?.email,
             phoneNumber: getValues(`values.${index}.telephoneNumber`),//data?.telephoneNumber,
             type: "INDIVIDUAL",
-            signature: getValues(`values.${index}.signature`),
-            passport: getValues(`values.${index}.passport`),
-            competenceCertificate: getValues(`values.${index}.certificate`),
-            idCardLink: getValues(`values.${index}.meansOfId`),
+            signature, //: getValues(`values.${index}.signature`),
+            passport, //: getValues(`values.${index}.passport`),
+            competenceCertificate, //: getValues(`values.${index}.certificate`),
+            idCardLink, //: getValues(`values.${index}.meansOfId`),
             businessNamePartnerId : savedPartnerId.at(index)
         };
 
@@ -325,7 +337,6 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
             body: savePartnerObj,
         }).then((res) => {
             const { data, success, message, code } = res.data;
-            console.log('response', data);
             save(false);
             if (success && code === 200) {
                 fieldset.disabled = true;
@@ -366,10 +377,11 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
         await deleteAxiosRequest(requestObj)
         .then((res) => {
             const { data, success, message, code } = res.data;
-            console.log('response', data);
             setDeleteState(false);
             if (success && code === 200) {
                 divForm.style.display = 'none';
+                remove(index);
+                dispatch(setFormsSaved(false));
             }
         }).catch((err) => {
             setDeleteState(false);
@@ -391,21 +403,24 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
         });
 
     }
-    const onChangeFileNamesHandler = (keyName:string, index: number, value : string) => {
-    //const { name, size, type } = file;
-    const newSignatureFile = fileNames.map((attachment: any, i: number) => index === i
-        ? Object.assign(attachment, { [keyName]: value })
-        : attachment);
-
-        console.log({newSignatureFile});
-    setFileNames(newSignatureFile);
-}
    
     const onSubmitIndividualHandler = async (data: any) => {
-        console.log('data', data);
-        // setTimeout(() => {
-        //     setAxiosResponse({...axiosResponse, msg : '', isError : false})
-        // },60000)
+        const form = document.getElementById('form-id') as HTMLFormElement;
+        console.log({data});
+        // form.reset();
+        // reset();
+    }
+
+    const getFileValueName = (key : string) => {
+        if(getValues(key) && typeof getValues(key) !== "string"){
+            return getValues(key)[0]?.name;   
+        }
+        return getValues(key)?.split('#')?.pop();
+    }
+
+    const getSavedForm = (index : number) => {
+        //get index of saved partners
+        return requestStatus.filter((i:number) => index === i);
     }
 
     React.useEffect(() => {
@@ -509,10 +524,15 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                 <div className='flex flex-col md:w-1/3 w-full'>
                                     <p className='font-bold'>LGA</p>
                                     <select
+<<<<<<< HEAD
+                                        className='w-full border border-[#CBCBCB] py-2 px-3 rounded-md'
+                                        id={`select-${index}`}
+=======
                                         //name="lga" 
                                         className='w-full border border-[#CBCBCB] py-2 px-3 rounded-md'
                                         id={`select-${index}`}
                                         //onChange={(e) => console.log(e.target.value)}
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
                                         {...register(`values.${index}.lga`, { required: true })}
                                     >
                                         <option value="LGA">Select LGA</option>
@@ -530,9 +550,13 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                     <input
                                         type="text"
                                         id={`input-${index}`}
+<<<<<<< HEAD
+                                        className='py-2 text-sm  px-4 rounded-md border border-[#CBCBCB] w-full'
+=======
                                         //name='city'
                                         className='py-2 text-sm  px-4 rounded-md border border-[#CBCBCB] w-full'
                                         //onChange={(e) => onChangeTextHandler(e, index)}
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
                                         {...register(`values.${index}.city`, { required: true })}
                                     />
                                 </div>
@@ -644,15 +668,25 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                             required: true, 
                                             onChange: async (e) => {
                                                 const key = `values.${index}.signature`;
+<<<<<<< HEAD
+                                                await uploadPartnerAttachment(e,(getValues(key) as FileList), key, index);
+=======
 
                                                 await uploadPartnerAttachment((getValues(key) as FileList), key);
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
                                             }
                                         }
                                         )}
                                     />
+<<<<<<< HEAD
+                                    <div className='text-black'>{getFileValueName(`values.${index}.signature`)}</div>
+
+                                    {!getValues(`values.${index}.signature`) ?
+=======
                                     <div className='text-black'>{getValues(`values.${index}.signature`)[0]?.name}</div>
 
                                     {!getValues(`values.${index}.signature`)[0]?.name ?
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
                                         <div className='cursor-pointer hover:text-[#1976D2] w-fit flex flex-row items-center gap-1'
                                             onClick={() => {
                                                 document.getElementById(`signature-${index}`)?.click();
@@ -677,15 +711,24 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                             required: true,
                                             onChange: async (e) => {
                                                 const key = `values.${index}.passport`;
+<<<<<<< HEAD
+                                                await uploadPartnerAttachment(e,(getValues(key) as FileList), key, index);
+=======
                                                 onChangeFileNamesHandler('passport',index, getValues(key)[0]?.name);
                                                 await uploadPartnerAttachment((getValues(key) as FileList), key);
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
                                             }
                                         })} />
 
                                     <p>Photograph&nbsp;Photograph:</p>
 
+<<<<<<< HEAD
+                                    <div className='text-black'>{getFileValueName(`values.${index}.passport`)}</div>
+                                    {!getValues(`values.${index}.passport`) ?
+=======
                                     <div className='text-black'>{fileNames.at(index)?.passport}</div>
                                     {!fileNames.at(index)?.passport ?
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
                                         <div className='cursor-pointer hover:text-[#1976D2] w-fit flex flex-row items-center gap-1'
                                             onClick={() => {
                                                 document.getElementById(`passport-${index}`)?.click();
@@ -695,7 +738,11 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                         </div>
                                         :
                                         <div className='cursor-pointer text-[#FF2D2D] w-fit flex flex-row items-center gap-1'
+<<<<<<< HEAD
+                                            onClick={() => emptyFileInputField(`passport-${index}`, index)}>
+=======
                                             onClick={() => onChangeFileNamesHandler('passport',index, '')}>
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
                                             <object data="/delete.png" className='w-4 h-4 object-contain' />
                                             <p>Delete</p>
                                         </div>
@@ -711,13 +758,22 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                             required: true,
                                             onChange: async (e) => {
                                                 const key = `values.${index}.meansOfId`;
+<<<<<<< HEAD
+                                                await uploadPartnerAttachment(e,(getValues(key) as FileList), key, index);
+=======
                                                 await uploadPartnerAttachment((getValues(key) as FileList), key);
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
                                             }
                                         })}
                                     />
                                     <p>Means&nbsp;Of&nbsp;Identification:</p>
+<<<<<<< HEAD
+                                    <div className='text-black'>{getFileValueName(`values.${index}.meansOfId`)}</div>
+                                    {!getValues(`values.${index}.meansOfId`) ?
+=======
                                     <div className='text-black'>{getValues(`values.${index}.meansOfId`)[0]?.name}</div>
                                     {!getValues(`values.${index}.meansOfId`)[0]?.name ?
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
                                         <div className='cursor-pointer hover:text-[#1976D2] w-fit flex flex-row items-center gap-1'
                                             onClick={() => {
                                                 document.getElementById(`meansOfId-${index}`)?.click();
@@ -747,14 +803,23 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                             required: true,
                                             onChange: async (e) => {
                                                 const key = `values.${index}.certificate`;
+<<<<<<< HEAD
+                                                await uploadPartnerAttachment(e,(getValues(key) as FileList), key, index);
+=======
                                                 await uploadPartnerAttachment((getValues(key) as FileList), key);
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
                                             }
                                         })}
                                     />
                                     <p>Certificate&nbsp;Of&nbsp;Competence:</p>
 
+<<<<<<< HEAD
+                                    <div className='text-black'>{getFileValueName(`values.${index}.certificate`)}</div>
+                                    {!getValues(`values.${index}.certificate`)?
+=======
                                     <div className='text-black'>{getValues(`values.${index}.certificate`)[0]?.name}</div>
                                     {!getValues(`values.${index}.certificate`)[0]?.name ?
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
                                         <div className='cursor-pointer hover:text-[#1976D2] w-fit flex flex-row items-center gap-1'
                                             onClick={() => {
                                                 document.getElementById(`certificate-${index}`)?.click();
@@ -775,7 +840,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                         <div className='flex justify-end text-white'>
                             {!getSavedForm(index).includes(index) ?
                                 <button
-                                    id={`save-${index}-button`}
+                                    id={`save-button-${index}`}
                                     className='bg-[#2B85F0] rounded-md outline-none 
                                     px-4 py-2 text-xs flex flex-row 
                                     items-center font-semibold gap-1
@@ -829,6 +894,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                 register={register}
                 watch={watch}
                 setValue={setValue}
+                remove={removeFromCooperate}
                 getValues={getValues}
                 />
 
@@ -854,7 +920,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                             onClick={() => {
                                 addCooperateForm();
                             }}
-                            disabled={isValidBusinessForm ? false : true}
+                            disabled={isValidBusinessForm ?false : true}
                             className='w-full md:w-fit text-[#6157A0] 
                             flex justify-center gap-1 md:justify-around 
                             font-semibold rounded-lg px-4 py-2 mb-4 
@@ -868,10 +934,12 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                             Add&nbsp;Cooperate&nbsp;Business&nbsp;Owner
                         </button>
                     </div>
-                    {/* || fieldsArray.length > 0   || isCooperateFormValid || !isSubmitting ? false : true*/}
-                    {fields.length > 0 &&
+                
+                    {getFormLength(fields,fieldsArray) &&
                         <button
-                            disabled={isValid ? false : true}
+                            disabled={getAllSavedForms(isSavedArraySelector?.length,
+                                getValues('values')?.length,
+                                getValues('cooperate')?.length) ? false : true}
                             className='md:w-fit w-full text-center bg-[#16C807] justify-self-end
                             rounded-md outline-none px-4 h-fit py-2.5 text-xs text-white font-semibold gap-1
                             disabled:bg-[#EFF0F6] 

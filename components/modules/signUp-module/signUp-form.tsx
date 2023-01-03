@@ -130,7 +130,7 @@ export const SignUpForm = (): JSX.Element => {
                     setAxiosResponse({ ...axiosResponse, msg: message, isError: false });
                     setTimeout(() => {
                         router.push('/verify-account');
-                    }, 3000);
+                    }, 1000);
                     //router.push('/verify-account');
                 }
             }

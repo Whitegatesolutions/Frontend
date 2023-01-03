@@ -54,6 +54,7 @@ export default function AppProvider({ children }: Props): JSX.Element {
         ));
     }
 
+
     if (isFetched) {
         //console.log('fetched', data);
         dispatch(addUserData({
