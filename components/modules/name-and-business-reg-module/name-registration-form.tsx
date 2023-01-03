@@ -157,12 +157,24 @@ export const NameRegistrationFormComponent = () : JSX.Element => {
                             <input 
                             type="text" 
                             id="firstName"
-                            className='text-sm py-2 px-4 rounded-md border border-[#CBCBCB] w-full'
+                            className={validateBusinessNames(
+                                getValues(`values.firstNameSuggestion`),
+                                getValues(`values.secondNameSuggestion`))
+                            ?  'text-sm py-2 px-4 rounded-md border border-[#CBCBCB] w-full'
+                            : "py-2 text-sm  px-4 rounded-md border border-[#FF2D2D] w-full"}
+
                             {...register(`values.firstNameSuggestion`, { 
                                 required: true,
                             })}
                             />
-                            <span id="name1" className='invisible'>Business&nbsp;Names&nbsp;Should&nbsp;not&nbsp;be&nbsp;the&nbsp;same</span>
+                            <span id="name1" className={
+                                validateBusinessNames(
+                                    getValues(`values.firstNameSuggestion`),
+                                    getValues(`values.secondNameSuggestion`))
+                                ? "visible text-xs text-[#FF2D2D]" 
+                                :'invisible'}>
+                                Business&nbsp;Names&nbsp;Should&nbsp;not&nbsp;be&nbsp;the&nbsp;same
+                            </span>
                         </div>
                         <div className='flex flex-col md:w-1/2 w-full'>
                             <p className='font-bold'>Name&nbsp;Suggestion&nbsp;2</p>

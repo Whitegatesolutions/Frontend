@@ -865,9 +865,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                 
                     {getFormLength(fields,fieldsArray) &&
                         <button
-                            disabled={getAllSavedForms(isSavedArraySelector?.length,
-                                getValues('values')?.length,
-                                getValues('cooperate')?.length) ? false : true}
+                            disabled={isValid}
                             className='md:w-fit w-full text-center bg-[#16C807] justify-self-end
                             rounded-md outline-none px-4 h-fit py-2.5 text-xs text-white font-semibold gap-1
                             disabled:bg-[#EFF0F6] 
