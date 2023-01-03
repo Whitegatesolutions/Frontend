@@ -116,6 +116,13 @@ export const SignUpForm = (): JSX.Element => {
         await postAxiosRequest(axiosRequestObject).then((response) => {
             const { data, code, success, message } = response.data;
 
+            if(success && code === 200 && message == Constants.API_RESPONSE_VERIFICATION_MESSAGE){
+                setTimeout(() => {
+                    router.push('/verify-account');
+                }, 1000);
+                return;
+            }
+            
             if (success && code === 200) {
                 const { token, tokenExpiryDate, tokenInitializationDate, userId } = data;
                 if (token && userId) {

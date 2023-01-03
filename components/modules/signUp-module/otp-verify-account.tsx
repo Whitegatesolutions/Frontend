@@ -84,7 +84,7 @@ export const SignUpOtpComponent = () : JSX.Element => {
                 setAxiosResponse({...axiosResponse, msg : message, isError : false});
                 setTimeout(() => {
                     router.push('/new-registration');
-                },2000);
+                },1000);
             }
         }).catch((error : AxiosError) => {
             setLoaderState(false);

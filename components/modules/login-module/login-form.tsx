@@ -78,12 +78,7 @@ export const LoginForm = (): JSX.Element => {
         await postAxiosRequest(loginRequestObject)
             .then((response) => {
                 const { data, success, message, code } = response.data;
-                if(success && code === 200 && message == Constants.API_RESPONSE_VERIFICATION_MESSAGE){
-                    setTimeout(() => {
-                        router.push('/verify-account');
-                    }, 1000);
-                    return;
-                }
+                
                 if (success && code === 200) {
                     setLoaderState(false);
                     const { token, tokenInitializationDate, tokenExpiryDate, userId } = data;

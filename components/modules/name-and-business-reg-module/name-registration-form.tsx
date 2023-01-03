@@ -19,125 +19,86 @@ const nameRegInitialObj = {
 
 export const NameRegistrationFormComponent = () : JSX.Element => {
     const dispatch : Dispatch<AnyAction> = useDispatch();
-
-    const {
-        register, 
-        formState : {isValid, errors}, 
-        control,
-        handleSubmit, 
-        watch, 
-        getValues, 
-        setError}
-        = useForm<any>({
-        defaultValues : nameRegInitialObj
+    const [values, setValues] = React.useState(nameRegInitialObj);
+    const {firstNameSuggestion, secondNameSuggestion, businessAddress, email, phoneNumber} = values;
+    const [isError, setErrors] = React.useState({
+        email : false,
+        firstNames : false,
+        secondNames : false,
+        telephone : false
     });
 
-    const { fields, append } = useFieldArray<any>({
-        control,
-        name: "values"
-    });
+    const onChangeFirstNameHandler = (e : React.ChangeEvent<HTMLInputElement>) =>{
+        const {target : {value}}  = e;
+        setValues({...values, firstNameSuggestion : value});
+    }
 
-    const validateBusinessNames = (firstNameSuggestion : string, secondNameSuggestion : string) : boolean => {
-        const firstBNameInput = document.getElementById('firstName') as HTMLInputElement;
-        const secondBNameInput = document.getElementById('secondName') as HTMLInputElement;
-        const nameSpan = document.getElementById('name1') as HTMLSpanElement;
-        const name2Span = document.getElementById('name2') as HTMLSpanElement;
+    const onChangeSecondNameHandler = (e : React.ChangeEvent<HTMLInputElement>) =>{
+        const {target : {value}}  = e;
+        setValues({...values, secondNameSuggestion : value});
+    }
 
-        if(!firstNameSuggestion || !secondNameSuggestion){
-            nameSpan.className = "invisible";
-            name2Span.className = "invisible";
-            firstBNameInput.className = "py-2 text-sm  px-4 rounded-md border border-[#CBCBCB] w-full";
-            secondBNameInput.className = "py-2 text-sm  px-4 rounded-md border border-[#CBCBCB] w-full";
-            return false;    
-        }
-        if((firstNameSuggestion.toLowerCase() !== secondNameSuggestion.toLowerCase())){
-            nameSpan.className = "invisible";
-            name2Span.className = "invisible";
-            firstBNameInput.className = "py-2 text-sm  px-4 rounded-md border border-[#CBCBCB] w-full";
-            secondBNameInput.className = "py-2 text-sm  px-4 rounded-md border border-[#CBCBCB] w-full";
-            return true;
+    const onChangeBusinessAddressHandler = (e : React.ChangeEvent<HTMLInputElement>) =>{
+        const {target : {value}}  = e;
+        setValues({...values, businessAddress : value});
+    }
+
+    const onChangeEmailHandler = (e : React.ChangeEvent<HTMLInputElement>) =>{
+        const {target : {value}}  = e;
+        setValues({...values, email : value});
+        if(!validateEmail(value)){
+            setErrors({...isError, email : true});
         }else{
-            nameSpan.className = "visible text-xs text-[#FF2D2D]";
-            name2Span.className = "visible text-xs text-[#FF2D2D]";
-            firstBNameInput.className = "py-2 text-sm  px-4 rounded-md border border-[#FF2D2D] w-full";
-            secondBNameInput.className = "py-2 text-sm  px-4 rounded-md border border-[#FF2D2D] w-full";
-            return false;
+            setErrors({...isError, email : false});
         }
     }
 
-    const validateBusinessEmailFormat = (email : string) : boolean => {
-        const emailInput  = document.getElementById('mail') as HTMLInputElement;
-        const mailSpan = document.getElementById('mailSpan') as HTMLInputElement;
-        if(!email){
-            mailSpan.className = "invisible";
-            emailInput.className = "py-2 text-sm  px-4 rounded-md border focus:border-[#CBCBCB] w-full";
-            return false;
-        }
-        if(validateEmail(email)){
-            mailSpan.className = 'invisible';
-            emailInput.className = "py-2 text-sm  px-4 rounded-md border border-[#CBCBCB] w-full";
-            return true;
+    const onChangePhoneNumberHandler = (e : React.ChangeEvent<HTMLInputElement>) =>{
+        const {target : {value}}  = e;
+        setValues({...values, phoneNumber : value});
+
+        if(!validatePhoneNumber(value)){
+            setErrors({...isError, telephone : true});
         }else{
-            mailSpan.className = "visible text-xs text-[#FF2D2D]";
-            emailInput.className = "py-2 text-sm  px-4 rounded-md border border-[#FF2D2D] w-full";
-            return false;
-        }
-       
-    } 
-
-    const validateBusinessPhoneNumberFormat = (phoneNumber : string) : boolean => {
-        const phoneNumberInput = document.getElementById('telephone') as HTMLInputElement;
-        const telephone = document.getElementById('teleSpan') as HTMLSpanElement;
-
-        if(!phoneNumber){
-            telephone.className="invisible";
-            phoneNumberInput.className = "py-2 text-sm  px-4 rounded-md border border-[#CBCBCB] w-full";
-            return false;
-        }
-
-        if(validatePhoneNumber(phoneNumber)){
-            telephone.className = "invisible";
-            phoneNumberInput.className = "py-2 text-sm  px-4 rounded-md border border-[#CBCBCB] w-full";
-            return true; 
-        }else{
-            telephone.className = "visible text-xs text-[#FF2D2D]";
-            phoneNumberInput.className = "py-2 text-sm  px-4 rounded-md border border-[#FF2D2D] w-full";
-            return false;
+            setErrors({...isError, telephone : false});
         }
     }
+
 
     React.useEffect(() => {
-        const firstNameSuggestion : string = getValues(`values.firstNameSuggestion`) as string;
-        const secondNameSuggestion : string = getValues(`values.secondNameSuggestion`) as string;
-        const businessAddress : string = getValues(`values.businessAddress`) as string;
-        const email : string = getValues(`values.email`) as string;
-        const phoneNumber : string = getValues(`values.phoneNumber`) as string;
-
-        console.log({firstNameSuggestion,
-            secondNameSuggestion,
-            businessAddress,
-            email,
-            phoneNumber,
-            userId : getUserId()});
-
-        if(!validateBusinessEmailFormat(email) || 
-        !validateBusinessNames(firstNameSuggestion, secondNameSuggestion) || 
-        !validateBusinessPhoneNumberFormat(phoneNumber)
-        ){  //form.classList.remove("saveForm");
-            return;
+        
+        if(firstNameSuggestion && secondNameSuggestion 
+        && firstNameSuggestion.toLowerCase() === secondNameSuggestion.toLowerCase()){
+            setErrors({...isError, firstNames : true, secondNames : true});
+        }else{
+            setErrors({...isError, firstNames : false, secondNames : false});
         }
+        dispatch(setNameRegFormValidState(false));
         //dispatch redux object
-        dispatch(setBusinessNameRegData({
-            firstNameSuggestion,
-            secondNameSuggestion,
-            businessAddress,
-            email,
-            phoneNumber,
-            userId : getUserId()
-        }));
+        if(email && validateEmail(email) && 
+           phoneNumber && validatePhoneNumber(phoneNumber) && 
+            firstNameSuggestion && secondNameSuggestion && businessAddress &&
+            firstNameSuggestion.toLowerCase() !== secondNameSuggestion.toLowerCase()
 
-        dispatch(setNameRegFormValidState(isValid));
-    }, [watch, isValid, getValues, dispatch]);
+        ){
+            dispatch(setBusinessNameRegData({
+                firstNameSuggestion,
+                secondNameSuggestion,
+                businessAddress,
+                email,
+                phoneNumber,
+                userId : getUserId()
+            }));
+
+            dispatch(setNameRegFormValidState(true));
+        }
+    }, [
+        firstNameSuggestion,
+        secondNameSuggestion,
+        businessAddress,
+        email,
+        phoneNumber,
+    ]);
     
 
     return(
@@ -145,9 +106,6 @@ export const NameRegistrationFormComponent = () : JSX.Element => {
             <p className='text-[#6157A0] text-xl font-bold'>Name&nbsp;Registration</p>
             <form className='my-8' id="form-id" onSubmit={(e) => {
                 e.preventDefault();
-                handleSubmit((data) => {
-                    console.log('data', data);
-                })
             }}
             >
                 <fieldset id='fieldset'>
@@ -157,22 +115,15 @@ export const NameRegistrationFormComponent = () : JSX.Element => {
                             <input 
                             type="text" 
                             id="firstName"
-                            className={validateBusinessNames(
-                                getValues(`values.firstNameSuggestion`),
-                                getValues(`values.secondNameSuggestion`))
+                            required
+                            onChange={(e) => onChangeFirstNameHandler(e)}
+                            className={!isError.firstNames
                             ?  'text-sm py-2 px-4 rounded-md border border-[#CBCBCB] w-full'
                             : "py-2 text-sm  px-4 rounded-md border border-[#FF2D2D] w-full"}
-
-                            {...register(`values.firstNameSuggestion`, { 
-                                required: true,
-                            })}
                             />
-                            <span id="name1" className={
-                                validateBusinessNames(
-                                    getValues(`values.firstNameSuggestion`),
-                                    getValues(`values.secondNameSuggestion`))
-                                ? "visible text-xs text-[#FF2D2D]" 
-                                :'invisible'}>
+                            <span id="name1" className={!isError.firstNames
+                                ? 'invisible'
+                                :"visible text-xs text-[#FF2D2D]"}>
                                 Business&nbsp;Names&nbsp;Should&nbsp;not&nbsp;be&nbsp;the&nbsp;same
                             </span>
                         </div>
@@ -181,12 +132,17 @@ export const NameRegistrationFormComponent = () : JSX.Element => {
                             <input 
                             type="text" 
                             id = "secondName"
-                            className={'py-2 text-sm  px-4 rounded-md border border-[#CBCBCB] w-full'}
-                            //'py-2 text-sm  px-4 rounded-md border border-[#FF2D2D] w-full'
-                            {...register(`values.secondNameSuggestion`, { 
-                                required: true,
-                            })}/>
-                            <span id="name2" className={'invisible'}>Business&nbsp;Names&nbsp;Should&nbsp;not&nbsp;be&nbsp;the&nbsp;same</span>
+                            required
+                            onChange={(e) => onChangeSecondNameHandler(e)}
+                            className={!isError.secondNames?
+                                'py-2 text-sm  px-4 rounded-md border border-[#CBCBCB] w-full'
+                                :"py-2 text-sm  px-4 rounded-md border border-[#FF2D2D] w-full"
+                            }/>
+                            <span id="name2" className={!isError.secondNames
+                                ? 'invisible' 
+                                :"visible text-xs text-[#FF2D2D]"}>
+                                Business&nbsp;Names&nbsp;Should&nbsp;not&nbsp;be&nbsp;the&nbsp;same
+                            </span>
                         </div>
                     </div>
 
@@ -195,9 +151,8 @@ export const NameRegistrationFormComponent = () : JSX.Element => {
                         <input 
                         type="text" 
                         className='py-2 text-sm px-4 rounded-md border border-[#CBCBCB] w-full'
-                        {...register(`values.businessAddress`, {
-                            required: true,
-                        }) }
+                        required
+                        onChange={(e) => onChangeBusinessAddressHandler(e)}
                         />
                     </div>
 
@@ -207,25 +162,37 @@ export const NameRegistrationFormComponent = () : JSX.Element => {
                             <input 
                             type="email"
                             id="mail"
-                            className={`text-sm py-2 px-4 rounded-md border border-[#CBCBCB] w-full`}
-                            {...register(`values.email`, {
-                                required: true,
-                            })}/>
-                            <span id='mailSpan' className={'invisible'}>Invalid&nbsp;Email&nbsp;Format</span>
+                            className={!isError.email?
+                                'py-2 text-sm  px-4 rounded-md border border-[#CBCBCB] w-full'
+                                :"py-2 text-sm  px-4 rounded-md border border-[#FF2D2D] w-full"
+                            }
+                            required
+                            onChange={(e) => onChangeEmailHandler(e)}
+                            />
+                            <span id='mailSpan' className={
+                                !isError.email
+                                ? 'invisible' 
+                                :"visible text-xs text-[#FF2D2D]"
+                            }>Invalid&nbsp;Email&nbsp;Format</span>
                         </div>
                         <div className='flex flex-col md:w-1/2 w-full'>
                             <p className='font-bold'>Telephone</p>
                             <input 
                             type={"text"} 
                             id="telephone"
-                            className='py-2 text-sm px-4 rounded-md border border-[#CBCBCB] w-full'
+                            className={!isError.telephone?
+                                'py-2 text-sm  px-4 rounded-md border border-[#CBCBCB] w-full'
+                                :"py-2 text-sm  px-4 rounded-md border border-[#FF2D2D] w-full"
+                            }
+                            required
                             maxLength={11}
-                            {...register(`values.phoneNumber`, {
-                                required: true, 
-                                maxLength : 11
-                            }) }
+                            onChange={ (e) => onChangePhoneNumberHandler(e) }
                             />
-                            <span id="teleSpan" className={'invisible'}>Invalid&nbsp;Phone&nbsp;Number</span>
+                            <span id="teleSpan" className={
+                                !isError.telephone
+                                ? 'invisible' 
+                                :"visible text-xs text-[#FF2D2D]"
+                            }>Invalid&nbsp;Phone&nbsp;Number</span>
                         </div>
                     </div>
                 </fieldset>
