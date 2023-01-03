@@ -8,10 +8,10 @@ import { ErrorInterfaceObj } from '../../../utils/constants';
 import { cooperateFormObj, DaysArray, MonthsArray, Years } from '../../../utils/collections';
 import { CooperateFormsComponent } from './cooperate-forms';
 import { useFieldArray, useForm } from 'react-hook-form';
-import { validateEmail } from '../../../utils/util-functions';
+import { customFilter, disableButtons, getAllSavedForms, getFormLength, validateEmail } from '../../../utils/util-functions';
 import { useSelector, useDispatch } from 'react-redux';
 import { AnyAction, Dispatch } from 'redux';
-import { addLgaData, setBusinessNameRegId, setCooperateFieldArrayLength, setIndividualFieldArrayLength, setStateIdData } from '../../../redux/slices/app-slice';
+import { addLgaData, setBusinessNameRegId, setCooperateFieldArrayLength, setFormsSaved, setIndividualFieldArrayLength, setNameRegFormValidState, setStateIdData } from '../../../redux/slices/app-slice';
 import { createBusinessNameRegJob, deleteAxiosRequest, patchAxiosRequestWithHeader, postAxiosRequestWithHeader, postAxiosRequestWithHeaderForBusinessReg, uploadFiles } from '../../../utils/axios-requests';
 import { AxiosError } from 'axios';
 import { initialErrorObj } from '../login-module/login-form';
@@ -45,7 +45,6 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
         index: 0
     });
     const [axiosResponse, setAxiosResponse] = React.useState<ErrorInterfaceObj>(initialErrorObj);
-    const [fileNames, setFileNames] = React.useState<any[]>([]);
     const [requestStatus, isRequestSuccessful] = React.useState<any[]>([]);
 
     const [state, setState] = React.useState<any>({
@@ -67,7 +66,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
     const getNameRegObjectSelector = useSelector((state: any) => state.store.businessNameRegistration);
     const getNameRegIdSelector = useSelector((state: any) => state.store.businessNameRegistrationId);
     const isValidBusinessForm = useSelector((state : any) => state.store.nameRegFormIsValid);
-
+    const isSavedArraySelector = useSelector((state : any) => state.store.isSavedArray);
     const dispatch: Dispatch<AnyAction> = useDispatch();
     
     const {
@@ -78,23 +77,24 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
         setError,
         setValue,
         getValues,
-        watch
+        watch,
+        reset
     } = useForm<any>({
         // defaultValues: {}; you can populate the fields by this attribute 
     });
     const watchAllInputFields = watch();
-    const { fields, append } = useFieldArray<any>({
+    const { fields, append , remove} = useFieldArray<any>({
         control,
         name: "values",
     });
-    const { fields: fieldsArray, append: appendToCooperate } = useFieldArray<any>({
+    const { fields: fieldsArray, append: appendToCooperate, remove : removeFromCooperate} = useFieldArray<any>({
         control,
         name: "cooperate"
     });
 
     const uploadPartnerAttachment = async (
         e:React.ChangeEvent<HTMLInputElement>,
-        fileList: FileList, 
+        fileList: FileList,
         key: string, 
         index : number
         ): Promise<string[]> => {
@@ -129,11 +129,13 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
             dispatch(setCooperateFieldArrayLength(fieldsArray.length));
             return;
         }
+        dispatch(setNameRegFormValidState(false));
         await createBusinessNameRegJob({
             businessNameRegDetails: { ...getNameRegObjectSelector }
         }).then((res) => {
             const {data : {data, success, code}} = res;
             if(success && data?.businessNameRegistrationId){
+                dispatch(setNameRegFormValidState(true));
                 appendToCooperate(cooperateFormObj);
                 dispatch(setCooperateFieldArrayLength(fieldsArray.length));
                 dispatch(setBusinessNameRegId(data.businessNameRegistrationId));
@@ -142,6 +144,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
             }
         })
         .catch((err : AxiosError) => {
+            dispatch(setNameRegFormValidState(true));
             if(err.isAxiosError){
                 if(!err?.response?.data){
                     alert(err?.message);   
@@ -165,19 +168,22 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
             dispatch(setIndividualFieldArrayLength(fields.length));
             return;
         }
-        dispatch(setIndividualFieldArrayLength(fields.length));
+        dispatch(setNameRegFormValidState(false));
         await createBusinessNameRegJob({
             businessNameRegDetails: { ...getNameRegObjectSelector }
         }).then((res) => {
             const {data : {data, success, code}} = res;
             if(success && data?.businessNameRegistrationId){
+                dispatch(setNameRegFormValidState(true));
                 append(partnersObj);
+                dispatch(setIndividualFieldArrayLength(fields.length));
                 dispatch(setBusinessNameRegId( data.businessNameRegistrationId));
                 form.className = "saveForm my-8";
                 fieldset.disabled = true;
             }
         })
         .catch((err : AxiosError) => {
+            dispatch(setNameRegFormValidState(true));
             if(err.isAxiosError){
                 if(!err?.response?.data){
                     alert(err?.message);   
@@ -203,8 +209,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
     }
 
     const onSaveHandler = async (index: number) => {
-
-        const saveButton = document.getElementById(`save-${index}-button`) as HTMLButtonElement;
+        const saveButton = document.getElementById(`save-button-${index}`) as HTMLButtonElement;
         const divForm = document.getElementById(`form-div${index}`) as HTMLDivElement;
         const fieldset = document.getElementById(`fieldset-${index}`) as HTMLFieldSetElement;
         const signature = getValues(`values.${index}.signature`).split('#')[0];
@@ -240,20 +245,18 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
             body: savePartnerObj,
         }).then((res) => {
             const { data, success, message, code } = res.data;
-            console.log('response', data);
             save(false);
             if (success && code === 201) {
                 fieldset.disabled = true;
                 saveButton.disabled = false;
                 divForm.className = "saveForm w-full my-4 rounded-md border border-[#CBCBCB] shadow-lg bg-white h-auto p-4";
-                
+                dispatch(setFormsSaved(true));
                 setPartnerId(
                     (prev) => [...prev, data.id]
                 );
 
                 isRequestSuccessful((prev) => [...prev, index]);
-            }
-            
+            }            
 
         })
         .catch((err : AxiosError) => {
@@ -362,6 +365,8 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
             setDeleteState(false);
             if (success && code === 200) {
                 divForm.style.display = 'none';
+                remove(index);
+                dispatch(setFormsSaved(false));
             }
         }).catch((err) => {
             setDeleteState(false);
@@ -385,18 +390,19 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
     }
    
     const onSubmitIndividualHandler = async (data: any) => {
-        console.log('data', data);
-        // setTimeout(() => {
-        //     setAxiosResponse({...axiosResponse, msg : '', isError : false})
-        // },60000)
+        const form = document.getElementById('form-id') as HTMLFormElement;
+        console.log({data});
+        // form.reset();
+        // reset();
     }
 
     const getFileValueName = (key : string) => {
-        if(typeof getValues(key) === "string"){
-            return getValues(key)?.split('#')?.pop();
+        if(getValues(key) && typeof getValues(key) !== "string"){
+            return getValues(key)[0]?.name;   
         }
-        return getValues(key)[0]?.name;
+        return getValues(key)?.split('#')?.pop();
     }
+
     const getSavedForm = (index : number) => {
         //get index of saved partners
         return requestStatus.filter((i:number) => index === i);
@@ -763,7 +769,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                         <div className='flex justify-end text-white'>
                             {!getSavedForm(index).includes(index) ?
                                 <button
-                                    id={`save-${index}-button`}
+                                    id={`save-button-${index}`}
                                     className='bg-[#2B85F0] rounded-md outline-none 
                                     px-4 py-2 text-xs flex flex-row 
                                     items-center font-semibold gap-1
@@ -817,6 +823,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                 register={register}
                 watch={watch}
                 setValue={setValue}
+                remove={removeFromCooperate}
                 getValues={getValues}
                 />
 
@@ -842,7 +849,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                             onClick={() => {
                                 addCooperateForm();
                             }}
-                            disabled={isValidBusinessForm ? false : true}
+                            disabled={isValidBusinessForm ?false : true}
                             className='w-full md:w-fit text-[#6157A0] 
                             flex justify-center gap-1 md:justify-around 
                             font-semibold rounded-lg px-4 py-2 mb-4 
@@ -856,10 +863,12 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                             Add&nbsp;Cooperate&nbsp;Business&nbsp;Owner
                         </button>
                     </div>
-                    {/* || fieldsArray.length > 0   || isCooperateFormValid || !isSubmitting ? false : true*/}
-                    {fields.length > 0 &&
+                
+                    {getFormLength(fields,fieldsArray) &&
                         <button
-                            disabled={isValid ? false : true}
+                            disabled={getAllSavedForms(isSavedArraySelector?.length,
+                                getValues('values')?.length,
+                                getValues('cooperate')?.length) ? false : true}
                             className='md:w-fit w-full text-center bg-[#16C807] justify-self-end
                             rounded-md outline-none px-4 h-fit py-2.5 text-xs text-white font-semibold gap-1
                             disabled:bg-[#EFF0F6] 

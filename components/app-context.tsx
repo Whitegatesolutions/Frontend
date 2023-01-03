@@ -46,13 +46,14 @@ export default function AppProvider({ children }: Props): JSX.Element {
         refetchOnWindowFocus : false
     });
 
-    console.log('state', stateData);
+    //console.log('state', stateData);
 
     if(isStateDataFetched){
         dispatch(addStatesData(
             stateData?.data?.data
         ));
     }
+
 
     if (isFetched) {
         //console.log('fetched', data);

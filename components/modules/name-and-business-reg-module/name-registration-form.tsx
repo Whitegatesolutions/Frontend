@@ -18,9 +18,6 @@ const nameRegInitialObj = {
 //const form = defineDocument()?.getElementById('form-id') as HTMLFormElement;
 
 export const NameRegistrationFormComponent = () : JSX.Element => {
-
-    // const individualFormArrayLength = useSelector((state : any) => state.store.individualFieldArray);
-    // const cooperateFormArrayLength = useSelector((state : any) => state.store.cooperateFieldArray);
     const dispatch : Dispatch<AnyAction> = useDispatch();
 
     const {
@@ -35,26 +32,10 @@ export const NameRegistrationFormComponent = () : JSX.Element => {
         defaultValues : nameRegInitialObj
     });
 
-    const watchNameReg = watch();
-
     const { fields, append } = useFieldArray<any>({
         control,
         name: "values"
     });
-
-
-    const dispatchNameRegObject = (data : BusinessNameRegInterface, isFormValid : boolean) => {
-        dispatch(setBusinessNameRegData({
-            firstNameSuggestion : data.firstNameSuggestion,
-            secondNameSuggestion : data.secondNameSuggestion,
-            businessAddress : data.businessAddress,
-            email : data.email,
-            phoneNumber : data.phoneNumber,
-            userId : data.userId
-        }));
-
-        dispatch(setNameRegFormValidState(isFormValid));
-    }
 
     const validateBusinessNames = (firstNameSuggestion : string, secondNameSuggestion : string) : boolean => {
         const firstBNameInput = document.getElementById('firstName') as HTMLInputElement;
@@ -131,11 +112,13 @@ export const NameRegistrationFormComponent = () : JSX.Element => {
         const businessAddress : string = getValues(`values.businessAddress`) as string;
         const email : string = getValues(`values.email`) as string;
         const phoneNumber : string = getValues(`values.phoneNumber`) as string;
-        console.log({
-            names : validateBusinessNames(firstNameSuggestion, secondNameSuggestion),
-            email : validateBusinessEmailFormat(email),
-            phoneNumber : validateBusinessPhoneNumberFormat(phoneNumber)
-        });
+
+        console.log({firstNameSuggestion,
+            secondNameSuggestion,
+            businessAddress,
+            email,
+            phoneNumber,
+            userId : getUserId()});
 
         if(!validateBusinessEmailFormat(email) || 
         !validateBusinessNames(firstNameSuggestion, secondNameSuggestion) || 
@@ -143,38 +126,25 @@ export const NameRegistrationFormComponent = () : JSX.Element => {
         ){  //form.classList.remove("saveForm");
             return;
         }
-        //make the api request here
-        
-        dispatchNameRegObject({
+        //dispatch redux object
+        dispatch(setBusinessNameRegData({
             firstNameSuggestion,
             secondNameSuggestion,
             businessAddress,
             email,
             phoneNumber,
             userId : getUserId()
-            }, isValid);
+        }));
 
-    }, [watch,
-        isValid,
-        getValues(`values.firstNameSuggestion`),
-        getValues(`values.secondNameSuggestion`),
-        getValues(`values.businessAddress`),
-        getValues(`values.email`),
-        getValues(`values.phoneNumber`)
-    ]);
+        dispatch(setNameRegFormValidState(isValid));
+    }, [watch, isValid, getValues, dispatch]);
     
 
     return(
         <div className="w-full lg:w-10/12">
             <p className='text-[#6157A0] text-xl font-bold'>Name&nbsp;Registration</p>
             <form className='my-8' 
-            id="form-id" onSubmit={(e) => {
-                e.preventDefault();
-                handleSubmit((data) => {
-                    console.log('data', data);
-                })
-            }}
-            >
+            id="form-id">
                 <fieldset id='fieldset'>
                     <div className='w-full flex flex-col md:flex-row gap-4 text-xs text-black'>
                         <div className='flex flex-col md:w-1/2 w-full'>

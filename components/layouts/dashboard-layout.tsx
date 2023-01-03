@@ -37,7 +37,6 @@ const DashboardLayout : FC<Props> = ({children}) => {
     
     const router : NextRouter = useRouter();
     const selector = useSelector((state : any) => state.store.data);
-    console.log('selector.change', selector);
     //const style = 'w-full flex justify-center text-base font-semibold cursor-pointer bg-white text-[#6157A0]';
     return(
         <Fragment>
