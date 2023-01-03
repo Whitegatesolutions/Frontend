@@ -122,8 +122,17 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
     
     const addCooperateForm = async () => {
         const form = document.getElementById('form-id') as HTMLFormElement;
+<<<<<<< HEAD
         const fieldset = document.getElementById('fieldset') as HTMLFieldSetElement;
 
+=======
+<<<<<<< HEAD
+        const fieldset = document.getElementById('fieldset') as HTMLFieldSetElement;
+
+=======
+        const fieldset = document.getElementById('feildset') as HTMLFieldSetElement;
+>>>>>>> 492991e0c513d32866ba65f8f3e7ee9b4ae94cea
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
         if(getNameRegIdSelector !== ''){
             appendToCooperate(cooperateFormObj);
             dispatch(setCooperateFieldArrayLength(fieldsArray.length));
@@ -212,10 +221,13 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
         const saveButton = document.getElementById(`save-button-${index}`) as HTMLButtonElement;
         const divForm = document.getElementById(`form-div${index}`) as HTMLDivElement;
         const fieldset = document.getElementById(`fieldset-${index}`) as HTMLFieldSetElement;
+<<<<<<< HEAD
         const signature = getValues(`values.${index}.signature`).split('#')[0];
         const passport = getValues(`values.${index}.passport`).split('#')[0];
         const idCardLink = getValues(`values.${index}.meansOfId`).split('#')[0];
         const competenceCertificate = getValues(`values.${index}.certificate`).split('#')[0];
+=======
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
 
         if(!saveButton){
             return;
@@ -290,11 +302,14 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
     const onEditPartnerHandler = async(index : number) => {
         const divForm = document.getElementById(`form-div${index}`) as HTMLDivElement;
         const fieldset = document.getElementById(`fieldset-${index}`) as HTMLFieldSetElement;
+<<<<<<< HEAD
         const signature = getValues(`values.${index}.signature`).split('#')[0];
         const passport = getValues(`values.${index}.passport`).split('#')[0];
         const idCardLink = getValues(`values.${index}.meansOfId`).split('#')[0];
         const competenceCertificate = getValues(`values.${index}.certificate`).split('#')[0];
 
+=======
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
 
         const savePartnerObj: Partial<CreateBusinessNameRegPartnerType> = {
             firstName: getValues(`values.${index}.firstName`),//data?.firstName,
@@ -509,8 +524,15 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                 <div className='flex flex-col md:w-1/3 w-full'>
                                     <p className='font-bold'>LGA</p>
                                     <select
+<<<<<<< HEAD
                                         className='w-full border border-[#CBCBCB] py-2 px-3 rounded-md'
                                         id={`select-${index}`}
+=======
+                                        //name="lga" 
+                                        className='w-full border border-[#CBCBCB] py-2 px-3 rounded-md'
+                                        id={`select-${index}`}
+                                        //onChange={(e) => console.log(e.target.value)}
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
                                         {...register(`values.${index}.lga`, { required: true })}
                                     >
                                         <option value="LGA">Select LGA</option>
@@ -528,7 +550,13 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                     <input
                                         type="text"
                                         id={`input-${index}`}
+<<<<<<< HEAD
                                         className='py-2 text-sm  px-4 rounded-md border border-[#CBCBCB] w-full'
+=======
+                                        //name='city'
+                                        className='py-2 text-sm  px-4 rounded-md border border-[#CBCBCB] w-full'
+                                        //onChange={(e) => onChangeTextHandler(e, index)}
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
                                         {...register(`values.${index}.city`, { required: true })}
                                     />
                                 </div>
@@ -640,14 +668,25 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                             required: true, 
                                             onChange: async (e) => {
                                                 const key = `values.${index}.signature`;
+<<<<<<< HEAD
                                                 await uploadPartnerAttachment(e,(getValues(key) as FileList), key, index);
+=======
+
+                                                await uploadPartnerAttachment((getValues(key) as FileList), key);
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
                                             }
                                         }
                                         )}
                                     />
+<<<<<<< HEAD
                                     <div className='text-black'>{getFileValueName(`values.${index}.signature`)}</div>
 
                                     {!getValues(`values.${index}.signature`) ?
+=======
+                                    <div className='text-black'>{getValues(`values.${index}.signature`)[0]?.name}</div>
+
+                                    {!getValues(`values.${index}.signature`)[0]?.name ?
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
                                         <div className='cursor-pointer hover:text-[#1976D2] w-fit flex flex-row items-center gap-1'
                                             onClick={() => {
                                                 document.getElementById(`signature-${index}`)?.click();
@@ -672,14 +711,24 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                             required: true,
                                             onChange: async (e) => {
                                                 const key = `values.${index}.passport`;
+<<<<<<< HEAD
                                                 await uploadPartnerAttachment(e,(getValues(key) as FileList), key, index);
+=======
+                                                onChangeFileNamesHandler('passport',index, getValues(key)[0]?.name);
+                                                await uploadPartnerAttachment((getValues(key) as FileList), key);
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
                                             }
                                         })} />
 
                                     <p>Photograph&nbsp;Photograph:</p>
 
+<<<<<<< HEAD
                                     <div className='text-black'>{getFileValueName(`values.${index}.passport`)}</div>
                                     {!getValues(`values.${index}.passport`) ?
+=======
+                                    <div className='text-black'>{fileNames.at(index)?.passport}</div>
+                                    {!fileNames.at(index)?.passport ?
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
                                         <div className='cursor-pointer hover:text-[#1976D2] w-fit flex flex-row items-center gap-1'
                                             onClick={() => {
                                                 document.getElementById(`passport-${index}`)?.click();
@@ -689,7 +738,11 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                         </div>
                                         :
                                         <div className='cursor-pointer text-[#FF2D2D] w-fit flex flex-row items-center gap-1'
+<<<<<<< HEAD
                                             onClick={() => emptyFileInputField(`passport-${index}`, index)}>
+=======
+                                            onClick={() => onChangeFileNamesHandler('passport',index, '')}>
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
                                             <object data="/delete.png" className='w-4 h-4 object-contain' />
                                             <p>Delete</p>
                                         </div>
@@ -705,13 +758,22 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                             required: true,
                                             onChange: async (e) => {
                                                 const key = `values.${index}.meansOfId`;
+<<<<<<< HEAD
                                                 await uploadPartnerAttachment(e,(getValues(key) as FileList), key, index);
+=======
+                                                await uploadPartnerAttachment((getValues(key) as FileList), key);
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
                                             }
                                         })}
                                     />
                                     <p>Means&nbsp;Of&nbsp;Identification:</p>
+<<<<<<< HEAD
                                     <div className='text-black'>{getFileValueName(`values.${index}.meansOfId`)}</div>
                                     {!getValues(`values.${index}.meansOfId`) ?
+=======
+                                    <div className='text-black'>{getValues(`values.${index}.meansOfId`)[0]?.name}</div>
+                                    {!getValues(`values.${index}.meansOfId`)[0]?.name ?
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
                                         <div className='cursor-pointer hover:text-[#1976D2] w-fit flex flex-row items-center gap-1'
                                             onClick={() => {
                                                 document.getElementById(`meansOfId-${index}`)?.click();
@@ -741,14 +803,23 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                             required: true,
                                             onChange: async (e) => {
                                                 const key = `values.${index}.certificate`;
+<<<<<<< HEAD
                                                 await uploadPartnerAttachment(e,(getValues(key) as FileList), key, index);
+=======
+                                                await uploadPartnerAttachment((getValues(key) as FileList), key);
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
                                             }
                                         })}
                                     />
                                     <p>Certificate&nbsp;Of&nbsp;Competence:</p>
 
+<<<<<<< HEAD
                                     <div className='text-black'>{getFileValueName(`values.${index}.certificate`)}</div>
                                     {!getValues(`values.${index}.certificate`)?
+=======
+                                    <div className='text-black'>{getValues(`values.${index}.certificate`)[0]?.name}</div>
+                                    {!getValues(`values.${index}.certificate`)[0]?.name ?
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
                                         <div className='cursor-pointer hover:text-[#1976D2] w-fit flex flex-row items-center gap-1'
                                             onClick={() => {
                                                 document.getElementById(`certificate-${index}`)?.click();

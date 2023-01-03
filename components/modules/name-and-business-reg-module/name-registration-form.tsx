@@ -107,6 +107,13 @@ export const NameRegistrationFormComponent = () : JSX.Element => {
     }
 
     React.useEffect(() => {
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+        
+>>>>>>> 492991e0c513d32866ba65f8f3e7ee9b4ae94cea
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
         const firstNameSuggestion : string = getValues(`values.firstNameSuggestion`) as string;
         const secondNameSuggestion : string = getValues(`values.secondNameSuggestion`) as string;
         const businessAddress : string = getValues(`values.businessAddress`) as string;
@@ -144,8 +151,23 @@ export const NameRegistrationFormComponent = () : JSX.Element => {
         <div className="w-full lg:w-10/12">
             <p className='text-[#6157A0] text-xl font-bold'>Name&nbsp;Registration</p>
             <form className='my-8' 
+<<<<<<< HEAD
             id="form-id">
                 <fieldset id='fieldset'>
+=======
+            id="form-id" onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmit((data) => {
+                    console.log('data', data);
+                })
+            }}
+            >
+<<<<<<< HEAD
+                <fieldset id='fieldset'>
+=======
+                <fieldset id="feildset">
+>>>>>>> 492991e0c513d32866ba65f8f3e7ee9b4ae94cea
+>>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
                     <div className='w-full flex flex-col md:flex-row gap-4 text-xs text-black'>
                         <div className='flex flex-col md:w-1/2 w-full'>
                             <p className='font-bold'>Name&nbsp;Suggestion&nbsp;1</p>
