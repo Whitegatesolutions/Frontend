@@ -48,16 +48,9 @@ export const CooperateFormsComponent:React.FC<Props> = ({
     const [axiosResponse, setAxiosResponse] = React.useState<ErrorInterfaceObj>(initialErrorObj);
     const getNameRegIdSelector = useSelector((state: any) => state.store.businessNameRegistrationId);
     const stateSelector = useSelector((state: any) => state.store.state);
-<<<<<<< HEAD
     const isSavedArraySelector = useSelector((state : any) => state.store.isSavedArray);
     
     const emptyFileInputField = (elementId : string) => {
-=======
-    console.log({requestStatus});
-    
-    const emptyFileInputField = (elementId : string) => {
-        setValue(`${elementId}`,'');
->>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
         document.getElementById(elementId)?.click();
     }
 
@@ -93,16 +86,11 @@ export const CooperateFormsComponent:React.FC<Props> = ({
     const onSaveHandler = async (index: number) => {
         const fieldset = document.getElementById(`cooperateFieldset-${index}`) as HTMLFieldSetElement;
         const saveButton = document.getElementById(`save-${index}-button`) as HTMLButtonElement;
-<<<<<<< HEAD
         const divForm = document.getElementById(`cooperate-form-div-${index}`) as HTMLDivElement;
         const signature = getValues(`cooperate.${index}.signature`)?.split('#')[0];
         const passport = getValues(`cooperate.${index}.passport`)?.split('#')[0];
         const idCardLink = getValues(`cooperate.${index}.meansOfId`)?.split('#')[0];
         const competenceCertificate = getValues(`cooperate.${index}.certificate`)?.split('#')[0];
-=======
-        const divForm = document.getElementById(`form-div${index}`) as HTMLDivElement;
-        const fieldset = document.getElementById(`fieldset-${index}`) as HTMLFieldSetElement;
->>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
 
         const savePartnerObj: Partial<CreateBusinessNameRegPartnerType> = {
             companyName: getValues(`cooperate.${index}.companyName`),
@@ -144,35 +132,8 @@ export const CooperateFormsComponent:React.FC<Props> = ({
                     (prev) => [...prev, data.id]
                 );
 
-<<<<<<< HEAD
-=======
-        if(!saveButton){
-            return;
-        }
-        save(true);
-        console.log({savePartnerObj})
-
-        await postAxiosRequestWithHeader({
-            uri: 'business-name-registration-partner',
-            body: savePartnerObj,
-        }).then((res) => {
-            const { data, success, message, code } = res.data;
-            console.log('response', data);
-            save(false);
-            if (success && code === 201) {
-                saveButton.disabled = false;
-                divForm.className = "saveForm w-full my-4 rounded-md border border-[#CBCBCB] shadow-lg bg-white h-auto p-4";
-                fieldset.disabled = true;
-                //console.log({key : data?.businessNameRegistration?.registeredPartnersForThsBusiness?.pop()?.id});
-                setPartnerId(
-                    (prev) => [...prev, data.id]
-                );
-
->>>>>>> 49969a2a4b50908130ffd5af2830f4b80b39d53b
                 isRequestSuccessful((prev) => [...prev, index]);
             }
-            
-
         })
         .catch((err : AxiosError) => {
             save(false);
