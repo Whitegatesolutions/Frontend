@@ -79,3 +79,19 @@ export function disableButtons(state: boolean, loading: boolean) {
 	}
 	return true;
 }
+
+
+export function showSubmitButton(
+	isChecked : boolean,
+	dispatchReduxArrayLength: number,
+	valuesArrayLength: number,
+	cooperateArrayLength: number){
+		if(isChecked && getAllSavedForms(
+			dispatchReduxArrayLength,
+			valuesArrayLength,
+			cooperateArrayLength
+		)){
+			return true;
+		}
+		return false;
+	}

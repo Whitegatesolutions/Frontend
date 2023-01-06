@@ -8,7 +8,7 @@ import { ErrorInterfaceObj } from '../../../utils/constants';
 import { cooperateFormObj, DaysArray, MonthsArray, Years } from '../../../utils/collections';
 import { CooperateFormsComponent } from './cooperate-forms';
 import { useFieldArray, useForm } from 'react-hook-form';
-import { customFilter, disableButtons, getAllSavedForms, getFormLength, validateEmail } from '../../../utils/util-functions';
+import { showSubmitButton, getAllSavedForms, getFormLength, validateEmail } from '../../../utils/util-functions';
 import { useSelector, useDispatch } from 'react-redux';
 import { AnyAction, Dispatch } from 'redux';
 import { addLgaData, setBusinessNameRegId, setCooperateFieldArrayLength, setFormsSaved, setIndividualFieldArrayLength, setNameRegFormValidState, setStateIdData } from '../../../redux/slices/app-slice';
@@ -51,15 +51,14 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
         open: true,
         vertical: 'top',
         horizontal: 'right',
+        isChecked : false
     });
+    const { vertical, horizontal, open, isChecked } = state;
+
     const [isSaving, save] = React.useState(false);
     const [isEdit, setEdit] = React.useState<number[]>([]);
-
     const [isDeleting, setDeleteState] = React.useState<boolean>(false);
-
     const [savedPartnerId, setPartnerId] =  React.useState<any[]>([]);
-
-    const { vertical, horizontal, open } = state;
     const stateSelector = useSelector((state: any) => state.store.state);
 
     const lgaSelector = useSelector((state: any) => state.store.lga);
@@ -122,7 +121,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
     
     const addCooperateForm = async () => {
         const form = document.getElementById('form-id') as HTMLFormElement;
-        const fieldset = document.getElementById('fieldset') as HTMLFieldSetElement;
+        //const fieldset = document.getElementById('fieldset') as HTMLFieldSetElement;
         if(getNameRegIdSelector !== ''){
             appendToCooperate(cooperateFormObj);
             dispatch(setCooperateFieldArrayLength(fieldsArray.length));
@@ -139,7 +138,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                 dispatch(setCooperateFieldArrayLength(fieldsArray.length));
                 dispatch(setBusinessNameRegId(data.businessNameRegistrationId));
                 form.className = "saveForm my-8";
-                fieldset.disabled = true;
+                //fieldset.disabled = true;
             }
         })
         .catch((err : AxiosError) => {
@@ -161,7 +160,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
 
     const addFormOnClickHandler = async () => {
         const form = document.getElementById('form-id') as HTMLFormElement;
-        const fieldset = document.getElementById('fieldset') as HTMLFieldSetElement;
+        //const fieldset = document.getElementById('fieldset') as HTMLFieldSetElement;
         if(getNameRegIdSelector !== ''){
             append(partnersObj);
             dispatch(setIndividualFieldArrayLength(fields.length));
@@ -178,7 +177,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                 dispatch(setIndividualFieldArrayLength(fields.length));
                 dispatch(setBusinessNameRegId( data.businessNameRegistrationId));
                 form.className = "saveForm my-8";
-                fieldset.disabled = true;
+                //fieldset.disabled = true;
             }
         })
         .catch((err : AxiosError) => {
@@ -826,6 +825,16 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                 getValues={getValues}
                 />
 
+                {getFormLength(fields,fieldsArray) && 
+                    <div className='flex flex-row items-center gap-2 bg-white text-black'>
+                        <input 
+                        type={"checkbox"} 
+                        onChange={(e) => setState({ ...state, isChecked: e.target.checked })} 
+                        />
+                        <span className='text-sm'>Kindly confirm that the information you have filled in above is correct as you will not be allowed to edit same after payment.</span>
+                    </div>
+                }
+
                 <section className='w-full grid md:grid-cols-2 gap-2 my-8'>
                     <div className='text-sm flex flex-col md:flex-row items-center gap-2 w-auto'>
                         <button
@@ -863,7 +872,11 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                         </button>
                     </div>
                 
-                    {getFormLength(fields,fieldsArray) &&
+                    {showSubmitButton(
+                        isChecked,
+                        isSavedArraySelector,
+                        getValues('values'),
+                        getValues('cooperate')) &&
                         <button
                             disabled={isValid}
                             className='md:w-fit w-full text-center bg-[#16C807] justify-self-end

@@ -90,7 +90,8 @@ const appDataSlice: Slice<AppGlobalState> = createSlice({
 			if (action.payload === true) {
 				state.isSavedArray.push(action.payload);
 			} else {
-				state.isSavedArray.pop();
+				//remove car from the colors array
+				state.isSavedArray.splice(state.isSavedArray.length -1,1);
 			}
 		},
 	},
