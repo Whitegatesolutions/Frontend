@@ -1,9 +1,7 @@
 import {
 	BusinessesGridInterface,
-	BusinessRegParticularsInterface,
-	CooperateRegParticularsInterface,
-	SidebarElementValuesObject,
 } from './constants';
+import { CooperateFormType } from './types.utils';
 
 export const ListOfBusinessesCollectionsForNewRegistration: Array<BusinessesGridInterface> =
 	[
@@ -104,47 +102,24 @@ export const yearsArray = (): number[] => {
 
 export const Years: number[] = yearsArray();
 
-export const businessRegObjInstance: BusinessRegParticularsInterface = {
-	id: 0,
-	firstName: '',
-	lastName: '',
-	otherName: '',
-	residentialAddress: '',
-	state: '',
-	lga: '',
-	city: '',
-	occupation: '',
-	nationality: '',
-	day: '',
-	month: '',
-	year: '',
-	email: '',
-	telephoneNumber: '',
-	signature: '',
-	passport: '',
-	meansOfId: '',
-	certificate: '',
-};
-
-export const cooperateFormObj:
-	| Partial<BusinessRegParticularsInterface>
-	| CooperateRegParticularsInterface = {
-	companyName: '',
-	rcNumber: '',
-	directorName: '',
-	residentialAddress: '',
-	state: '',
-	lga: '',
-	city: '',
-	occupation: '',
-	nationality: '',
-	day: '',
-	month: '',
-	year: '',
-	email: '',
-	telephoneNumber: '',
-	signature: '',
-	passport: '',
-	meansOfId: '',
-	certificate: '',
-};
+export const CooperateFormObject : CooperateFormType = {
+	companyName: "",
+    rcNumber: "",
+    directorName: "",
+    address: "",
+    state: "",
+    lga: "",
+    city: "",
+    occupation: "",
+    nationality: "",
+    day: "",
+    month: "",
+    year: "",
+    email: "",
+    telephoneNumber: "",
+    signature: "",
+    passport: "",
+    meansOfId: "",
+    certificate: "",
+    isSaved : false
+}

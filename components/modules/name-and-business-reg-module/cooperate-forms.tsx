@@ -14,7 +14,7 @@ import { initialErrorObj } from "../login-module/login-form";
 import { FormActionButtons } from "../../shared-components/form-actions-button";
 import { ComponentLoader } from "../componentLoader";
 import { Snackbar, SnackbarContent } from '@mui/material';
-import { customFilter } from "../../../utils/util-functions";
+import { customFilter, formUseEffect } from "../../../utils/util-functions";
 
 type Props = {
     array : any,
@@ -59,6 +59,23 @@ export const CooperateFormsComponent:React.FC<Props> = ({
         return requestStatus.filter((i:number) => index === i);
     }
 
+    const axiosError = (err : AxiosError) => {
+        if(err.isAxiosError){
+            if (!err?.response?.data) {
+                alert(err.message);
+                return;
+            }
+            if (err?.response?.data) {
+                const { data: { success, message, code } } = err.response as any;
+                if (!success && code !== 200) {
+                    setAxiosResponse({ ...axiosResponse, msg: message, isError: true });
+                    setTimeout(() => {
+                        setAxiosResponse({ ...axiosResponse, msg: "", isError: false });
+                    }, 4000);
+                }
+            }
+        }
+    }
     const uploadPartnerAttachment = async (fileList: FileList, key: string): Promise<string[]> => {
         //const saveButton = document.getElementById(`save-${index}-button`) as HTMLButtonElement;
         try {
@@ -96,7 +113,7 @@ export const CooperateFormsComponent:React.FC<Props> = ({
             companyName: getValues(`cooperate.${index}.companyName`),
             rcNumber: getValues(`cooperate.${index}.rcNumber`),
             nameOfDirector: getValues(`cooperate.${index}.directorName`),//data?.otherName,
-            address: getValues(`cooperate.${index}.residentialAddress`),//data?.residentialAddress,
+            address: getValues(`cooperate.${index}.address`),//data?.residentialAddress,
             lgaId: '3a7e7bd2-6f7c-4945-adf3-89a1d564db08',//data?.lga,
             city: getValues(`cooperate.${index}.city`), //data?.city,
             dateOfBirth: new Date(`${getValues(`cooperate.${index}.year`)}/${getValues(`cooperate.${index}.month`)}/${getValues(`cooperate.${index}.day`)} GMT`),
@@ -111,8 +128,6 @@ export const CooperateFormsComponent:React.FC<Props> = ({
             idCardLink, //: getValues(`cooperate.${index}.meansOfId`),
             businessNameRegistrationId: getNameRegIdSelector
         };
-        // console.log({savePartnerObj});
-        // return;
         if(!saveButton){
             return;
         }
@@ -131,28 +146,14 @@ export const CooperateFormsComponent:React.FC<Props> = ({
                 setPartnerId(
                     (prev) => [...prev, data.id]
                 );
-
+                setValue(`cooperate.${index}.isSaved`, true);
                 isRequestSuccessful((prev) => [...prev, index]);
             }
         })
         .catch((err : AxiosError) => {
             save(false);
-            if(err.isAxiosError){
-                saveButton.disabled = false;
-                if (!err?.response?.data) {
-                    alert(err.message);
-                    return;
-                }
-                if (err?.response?.data) {
-                    const { data: { success, message, code } } = err.response as any;
-                    if (!success && code !== 200) {
-                        setAxiosResponse({ ...axiosResponse, msg: message, isError: true });
-                        setTimeout(() => {
-                            setAxiosResponse({ ...axiosResponse, msg: "", isError: false });
-                        }, 4000);
-                    }
-                }
-            }
+            saveButton.disabled = false;
+            axiosError(err);
         });
     }
 
@@ -162,6 +163,7 @@ export const CooperateFormsComponent:React.FC<Props> = ({
         const divForm = document.getElementById(`cooperate-form-div-${index}`) as HTMLDivElement;
         divForm.classList.remove("saveForm");
         fieldset.disabled = false;
+        setValue(`cooperate.${index}.isSaved`, false);
     }
     const onEditPartnerHandler = async(index : number) => {
         const fieldset = document.getElementById(`cooperateFieldset-${index}`) as HTMLFieldSetElement;
@@ -176,7 +178,7 @@ export const CooperateFormsComponent:React.FC<Props> = ({
             companyName: getValues(`cooperate.${index}.companyName`),
             rcNumber: getValues(`cooperate.${index}.rcNumber`),
             nameOfDirector: getValues(`cooperate.${index}.directorName`),//data?.otherName,
-            address: getValues(`cooperate.${index}.residentialAddress`),//data?.residentialAddress,
+            address: getValues(`cooperate.${index}.address`),//data?.residentialAddress,
             lgaId: '3a7e7bd2-6f7c-4945-adf3-89a1d564db08',//data?.lga,
             city: getValues(`cooperate.${index}.city`), //data?.city,
             dateOfBirth: new Date(`${getValues(`cooperate.${index}.year`)}/${getValues(`cooperate.${index}.month`)}/${getValues(`cooperate.${index}.day`)} GMT`),
@@ -191,7 +193,6 @@ export const CooperateFormsComponent:React.FC<Props> = ({
             idCardLink,  //: getValues(`cooperate.${index}.meansOfId`),
             businessNamePartnerId : savedPartnerId.at(index)
         };
-        console.log('patch',{savePartnerObj});
         save(true);
         await patchAxiosRequestWithHeader({
             uri: 'business-name-registration-partner',
@@ -205,6 +206,7 @@ export const CooperateFormsComponent:React.FC<Props> = ({
                 divForm.className = "saveForm w-full my-4 rounded-md border border-[#CBCBCB] shadow-lg bg-white h-auto p-4";
                 //remove the successfully edited forms from the array edited array 
                 setEdit((prev) => prev.filter((values : number) => values !== index));
+                setValue(`cooperate.${index}.isSaved`, true);
                 //isRequestSuccessful((prev) => [...prev, index]);
             }
             
@@ -212,21 +214,7 @@ export const CooperateFormsComponent:React.FC<Props> = ({
         })
         .catch((err : AxiosError) => {
             save(false);
-            if(err.isAxiosError){
-                if (!err?.response?.data) {
-                    alert(err.message);
-                    return;
-                }
-                if (err?.response?.data) {
-                    const { data: { success, message, code } } = err.response as any;
-                    if (!success && code !== 200) {
-                        setAxiosResponse({ ...axiosResponse, msg: message, isError: true });
-                        setTimeout(() => {
-                            setAxiosResponse({ ...axiosResponse, msg: "", isError: false });
-                        }, 4000);
-                    }
-                }
-            }
+            axiosError(err);
         });
     }
     const onDeletePartnerHandler = async (index : number) => {
@@ -240,7 +228,6 @@ export const CooperateFormsComponent:React.FC<Props> = ({
         await deleteAxiosRequest(requestObj)
         .then((res) => {
             const { data, success, message, code } = res.data;
-            console.log('response', data);
             setDeleteState(false);
             if (success && code === 200) {
                 divForm.style.display = 'none';
@@ -250,21 +237,7 @@ export const CooperateFormsComponent:React.FC<Props> = ({
             }
         }).catch((err) => {
             setDeleteState(false);
-            if(err.isAxiosError){
-                if (!err?.response?.data) {
-                    alert(err.message);
-                    return;
-                }
-                if (err?.response?.data) {
-                    const { data: { success, message, code } } = err.response as any;
-                    if (!success && code !== 200) {
-                        setAxiosResponse({ ...axiosResponse, msg: message, isError: true });
-                        setTimeout(() => {
-                            setAxiosResponse({ ...axiosResponse, msg: "", isError: false });
-                        }, 4000);
-                    }
-                }
-            }
+            axiosError(err);
         });
 
     }
@@ -282,7 +255,11 @@ export const CooperateFormsComponent:React.FC<Props> = ({
         setState({ ...state, open: false });
     };
     React.useEffect(() => {
-        const subscription = watch((value : any, { name, type } : any) => console.log(value, name, type));
+        const subscription = watch((value : any, { name, type } : any) =>{
+            const sliptNames : string[] = name?.split('') as string[];
+            const index : number = parseInt(sliptNames.at(10) as string);
+            formUseEffect(value.values[index],`save-${index}-button`);
+        });
         return () => subscription.unsubscribe();
 
     }, [watch]);
@@ -350,7 +327,7 @@ export const CooperateFormsComponent:React.FC<Props> = ({
                                 <input 
                                 type="text" 
                                 className='py-2 text-sm px-4 rounded-md border border-[#CBCBCB] w-full' 
-                                {...register(`cooperate.${index}.residentialAddress`, {required : true})}/>
+                                {...register(`cooperate.${index}.address`, {required : true})}/>
                             </div>
 
                             {/* location details*/}

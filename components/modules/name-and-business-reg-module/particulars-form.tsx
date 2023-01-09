@@ -1,14 +1,13 @@
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
-import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import ControlPointRoundedIcon from '@mui/icons-material/ControlPointRounded';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import React from 'react';
 import { Snackbar, SnackbarContent } from '@mui/material';
 import { ErrorInterfaceObj } from '../../../utils/constants';
-import { cooperateFormObj, DaysArray, MonthsArray, Years } from '../../../utils/collections';
+import { CooperateFormObject, DaysArray, MonthsArray, Years } from '../../../utils/collections';
 import { CooperateFormsComponent } from './cooperate-forms';
 import { useFieldArray, useForm } from 'react-hook-form';
-import { showSubmitButton, getAllSavedForms, getFormLength, validateEmail } from '../../../utils/util-functions';
+import { showSubmitButton, getFormLength, validateEmail, formUseEffect } from '../../../utils/util-functions';
 import { useSelector, useDispatch } from 'react-redux';
 import { AnyAction, Dispatch } from 'redux';
 import { addLgaData, setBusinessNameRegId, setCooperateFieldArrayLength, setFormsSaved, setIndividualFieldArrayLength, setNameRegFormValidState, setStateIdData } from '../../../redux/slices/app-slice';
@@ -16,13 +15,13 @@ import { createBusinessNameRegJob, deleteAxiosRequest, patchAxiosRequestWithHead
 import { AxiosError } from 'axios';
 import { initialErrorObj } from '../login-module/login-form';
 import { ComponentLoader } from '../componentLoader';
-import { BusinessNameRegJobType, CreateBusinessNameRegPartnerType, JobResponseType } from '../../../utils/types.utils';
+import { IndividualFormType, CreateBusinessNameRegPartnerType, CooperateFormType } from '../../../utils/types.utils';
 
-const partnersObj = {
+const partnersObj : IndividualFormType = {
     firstName: "",
     lastName: "",
     otherName: "",
-    residentialAddress: "",
+    address: "",
     state: "",
     lga: "",
     city: "",
@@ -36,7 +35,8 @@ const partnersObj = {
     signature: "",
     passport: "",
     meansOfId: "",
-    certificate: ""
+    certificate: "",
+    isSaved : false
 };
 
 export const BusinessRegistrationParticularsForm = (): JSX.Element => {
@@ -91,15 +91,34 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
         name: "cooperate"
     });
 
+    const axiosError = (err : AxiosError) => {
+        if(err.isAxiosError){
+            if (!err?.response?.data) {
+                alert(err.message);
+                return;
+            }
+            if (err?.response?.data) {
+                const { data: { success, message, code } } = err.response as any;
+                if (!success && code !== 200) {
+                    setAxiosResponse({ ...axiosResponse, msg: message, isError: true });
+                    setTimeout(() => {
+                        setAxiosResponse({ ...axiosResponse, msg: "", isError: false });
+                    }, 4000);
+                }
+            }
+        }
+    }
     const uploadPartnerAttachment = async (
         e:React.ChangeEvent<HTMLInputElement>,
         fileList: FileList,
         key: string, 
         index : number
         ): Promise<string[]> => {
-        try {
-            const file = fileList.item(0);
 
+        try {
+
+            
+            const file = fileList.item(0);
             if (file) {
                 const uploadedFileResponse = await uploadFiles([file]);
                 if (uploadedFileResponse?.success) {
@@ -111,19 +130,16 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
             throw new Error('File was not found')
         }
         catch (ex : any) {
-            setAxiosResponse({...axiosResponse, msg : ex.message, isError : true});
-            setTimeout(() => {
-                setAxiosResponse({...axiosResponse, msg : '', isError : false});
-            },4000);
+            axiosError(ex);
             throw ex;
         }
     }
-    
+
     const addCooperateForm = async () => {
         const form = document.getElementById('form-id') as HTMLFormElement;
         //const fieldset = document.getElementById('fieldset') as HTMLFieldSetElement;
         if(getNameRegIdSelector !== ''){
-            appendToCooperate(cooperateFormObj);
+            appendToCooperate(CooperateFormObject);
             dispatch(setCooperateFieldArrayLength(fieldsArray.length));
             return;
         }
@@ -134,7 +150,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
             const {data : {data, success, code}} = res;
             if(success && data?.businessNameRegistrationId){
                 dispatch(setNameRegFormValidState(true));
-                appendToCooperate(cooperateFormObj);
+                appendToCooperate(CooperateFormObject);
                 dispatch(setCooperateFieldArrayLength(fieldsArray.length));
                 dispatch(setBusinessNameRegId(data.businessNameRegistrationId));
                 form.className = "saveForm my-8";
@@ -143,18 +159,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
         })
         .catch((err : AxiosError) => {
             dispatch(setNameRegFormValidState(true));
-            if(err.isAxiosError){
-                if(!err?.response?.data){
-                    alert(err?.message);   
-                    return; 
-                }
-                const { data : {message} } = err?.response as any;
-                setAxiosResponse({...axiosResponse, msg : message, isError : true});
-
-                setTimeout(() => {
-                    setAxiosResponse({...axiosResponse, msg : '', isError :false});
-                },6000);
-            }
+            axiosError(err);
         });
     }
 
@@ -182,18 +187,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
         })
         .catch((err : AxiosError) => {
             dispatch(setNameRegFormValidState(true));
-            if(err.isAxiosError){
-                if(!err?.response?.data){
-                    alert(err?.message);   
-                    return; 
-                }
-                const { data : {message} } = err?.response as any;
-                setAxiosResponse({...axiosResponse, msg : message, isError : true});
-
-                setTimeout(() => {
-                    setAxiosResponse({...axiosResponse, msg : '', isError :false});
-                },6000);
-            }
+            axiosError(err);
         });
     }
     
@@ -206,6 +200,20 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
         document.getElementById(elementId)?.click();
     }
 
+    const releaseSubmitButton = () => {
+        const values = getValues('values') as IndividualFormType[];
+        const cooperate = getValues('cooperate') as CooperateFormType[];
+
+        if(values && cooperate && values.length !== 0 &&
+        values.every((data : IndividualFormType) => data.isSaved === true)  &&
+        cooperate.length !== 0 &&
+        cooperate.every((data : CooperateFormType) => data.isSaved === true)
+        && isChecked && isValid
+        ){
+            return true;
+        }
+        return false;
+    }
     const onSaveHandler = async (index: number) => {
         const saveButton = document.getElementById(`save-button-${index}`) as HTMLButtonElement;
         const divForm = document.getElementById(`form-div${index}`) as HTMLDivElement;
@@ -223,7 +231,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
             firstName: getValues(`values.${index}.firstName`),//data?.firstName,
             lastName: getValues(`values.${index}.lastName`),
             otherName: getValues(`values.${index}.otherName`),//data?.otherName,
-            address: getValues(`values.${index}.residentialAddress`),//data?.residentialAddress,
+            address: getValues(`values.${index}.address`),//data?.residentialAddress,
             lgaId: '3a7e7bd2-6f7c-4945-adf3-89a1d564db08',//data?.lga,
             city: getValues(`values.${index}.city`), //data?.city,
             dateOfBirth: new Date(`${getValues(`values.${index}.year`)}/${getValues(`values.${index}.month`)}/${getValues(`values.${index}.day`)} GMT`),
@@ -238,7 +246,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
             idCardLink, //getValues(`values.${index}.meansOfId`),
             businessNameRegistrationId: getNameRegIdSelector
         };
-        const response = await postAxiosRequestWithHeader({
+        await postAxiosRequestWithHeader({
             uri: 'business-name-registration-partner',
             body: savePartnerObj,
         }).then((res) => {
@@ -249,6 +257,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                 saveButton.disabled = false;
                 divForm.className = "saveForm w-full my-4 rounded-md border border-[#CBCBCB] shadow-lg bg-white h-auto p-4";
                 dispatch(setFormsSaved(true));
+                setValue(`values.${index}.isSaved`, true);
                 setPartnerId(
                     (prev) => [...prev, data.id]
                 );
@@ -259,22 +268,8 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
         })
         .catch((err : AxiosError) => {
             save(false);
-            if(err.isAxiosError){
-                saveButton.disabled = false;
-                if (!err?.response?.data) {
-                    alert(err.message);
-                    return;
-                }
-                if (err?.response?.data) {
-                    const { data: { success, message, code } } = err.response as any;
-                    if (!success && code !== 200) {
-                        setAxiosResponse({ ...axiosResponse, msg: message, isError: true });
-                        setTimeout(() => {
-                            setAxiosResponse({ ...axiosResponse, msg: "", isError: false });
-                        }, 4000);
-                    }
-                }
-            }
+            saveButton.disabled = false;
+            axiosError(err);
         });
     }
     const onClickEditButtonHandler = async(index : number) =>{
@@ -282,6 +277,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
         const divForm = document.getElementById(`form-div${index}`) as HTMLDivElement;
         const fieldset = document.getElementById(`fieldset-${index}`) as HTMLFieldSetElement;
         divForm.classList.remove("saveForm");
+        setValue(`values.${index}.isSaved`, false);
         fieldset.disabled = false;
     }
 
@@ -298,7 +294,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
             firstName: getValues(`values.${index}.firstName`),//data?.firstName,
             lastName: getValues(`values.${index}.lastName`),
             otherName: getValues(`values.${index}.otherName`),//data?.otherName,
-            address: getValues(`values.${index}.residentialAddress`),//data?.residentialAddress,
+            address: getValues(`values.${index}.address`),//data?.residentialAddress,
             lgaId: '3a7e7bd2-6f7c-4945-adf3-89a1d564db08',//data?.lga,
             city: getValues(`values.${index}.city`), //data?.city,
             dateOfBirth: new Date(`${getValues(`values.${index}.year`)}/${getValues(`values.${index}.month`)}/${getValues(`values.${index}.day`)} GMT`),
@@ -325,6 +321,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                 fieldset.disabled = true;
                 divForm.className = "saveForm w-full my-4 rounded-md border border-[#CBCBCB] shadow-lg bg-white h-auto p-4";
                 //remove the successfully edited forms from the array edited array 
+                setValue(`values.${index}.isSaved`, true);
                 setEdit((prev) => prev.filter((values : number) => values !== index));
                 //isRequestSuccessful((prev) => [...prev, index]);
             }
@@ -333,21 +330,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
         })
         .catch((err : AxiosError) => {
             save(false);
-            if(err.isAxiosError){
-                if (!err?.response?.data) {
-                    alert(err.message);
-                    return;
-                }
-                if (err?.response?.data) {
-                    const { data: { success, message, code } } = err.response as any;
-                    if (!success && code !== 200) {
-                        setAxiosResponse({ ...axiosResponse, msg: message, isError: true });
-                        setTimeout(() => {
-                            setAxiosResponse({ ...axiosResponse, msg: "", isError: false });
-                        }, 4000);
-                    }
-                }
-            }
+            axiosError(err);
         });
     }
     const onDeletePartnerHandler = async (index : number) => {
@@ -368,30 +351,26 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
             }
         }).catch((err) => {
             setDeleteState(false);
-            if(err.isAxiosError){
-                if (!err?.response?.data) {
-                    alert(err.message);
-                    return;
-                }
-                if (err?.response?.data) {
-                    const { data: { success, message, code } } = err.response as any;
-                    if (!success && code !== 200) {
-                        setAxiosResponse({ ...axiosResponse, msg: message, isError: true });
-                        setTimeout(() => {
-                            setAxiosResponse({ ...axiosResponse, msg: "", isError: false });
-                        }, 4000);
-                    }
-                }
-            }
+            axiosError(err);
         });
 
     }
    
     const onSubmitIndividualHandler = async (data: any) => {
-        const form = document.getElementById('form-id') as HTMLFormElement;
-        console.log({data});
-        // form.reset();
-        // reset();
+        const requestBody = {
+            uri : 'job/job/update-business-name-reg',
+            body : getNameRegObjectSelector
+        }
+        await patchAxiosRequestWithHeader(requestBody)
+        .then((res) => {
+            const {data : {data, message, code,success}} = res;
+            if(success && code === 200){
+                //submit successful
+                alert(message);
+            }
+        }).catch((err : AxiosError) => {
+            axiosError(err);
+        });
     }
 
     const getFileValueName = (key : string) => {
@@ -407,8 +386,25 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
     }
 
     React.useEffect(() => {
-        // const subscription = watch((value, { name, type }) => console.log(value, name, type));
-        // return () => subscription.unsubscribe();
+        const subscription = watch((value, { name, type }) => {
+            //get index of currently target to either disable or enable save button
+            const sliptNames : string[] = name?.split('') as string[];
+            console.log({at : sliptNames.at(7)});
+            const index : number = parseInt(sliptNames.at(7) as string);
+            formUseEffect(value.values[index],`save-button-${index}`);
+
+            // const saveButton = document.getElementById(`save-button-${index}`) as HTMLButtonElement;
+            // if(!saveButton){
+            //     return;
+            // }
+            // const isNotEmpty = Object.values(value.values[index]).every((value : any) => value !== "");
+            // if(isNotEmpty){
+            //     saveButton.disabled = false;
+            // }else{
+            //     saveButton.disabled = true;
+            // }
+        });
+        return () => subscription.unsubscribe();
     }, [
         watchAllInputFields,
         watch, 
@@ -478,7 +474,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                     type="text"
                                     className='py-2 text-sm px-4 rounded-md border border-[#CBCBCB] w-full'
                                     id={`input-${index}`}
-                                    {...register(`values.${index}.residentialAddress`, { required: true })}
+                                    {...register(`values.${index}.address`, { required: true })}
                                 />
                             </div>
 
@@ -509,8 +505,8 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                     <select
                                         className='w-full border border-[#CBCBCB] py-2 px-3 rounded-md'
                                         id={`select-${index}`}
-                                        {...register(`values.${index}.lga`, { required: true })}
-                                    >
+                                        {...register(`values.${index}.lga`, { required: true,})}>
+
                                         <option value="LGA" selected>Select LGA</option>
                                         <option value="LGA">Vandekya</option>
                                         <option value="LGA">Bende</option>
@@ -539,8 +535,6 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                         type={"text"}
                                         id={`input-${index}`}
                                         className='text-sm py-2 px-4 rounded-md border border-[#CBCBCB] w-full'
-                                        // name="occupation"
-                                        // onChange={(e) => onChangeTextHandler(e, index)}
                                         {...register(`values.${index}.occupation`, { required: true })}
                                     />
                                 </div>
@@ -550,8 +544,6 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                         type="text"
                                         id={`input-${index}`}
                                         className='py-2 text-sm px-4 rounded-md border border-[#CBCBCB] w-full'
-                                        // name='nationality'
-                                        // onChange={(e) => onChangeTextHandler(e, index)}
                                         {...register(`values.${index}.nationality`, { required: true })}
                                     />
                                 </div>
@@ -574,8 +566,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                             )}
                                         </select>
                                         <select
-                                            //name="month"
-                                            id={`se;ect-${index}`}
+                                            id={`select-${index}`}
                                             className='w-1/3 border border-[#CBCBCB] py-2 px-3 rounded-md'
                                             {...register(`values.${index}.month`, { required: true })}
                                         >
@@ -585,7 +576,6 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                             )}
                                         </select>
                                         <select
-                                            //name="year" 
                                             id={`select-${index}`}
                                             className='w-1/3 border border-[#CBCBCB] py-2 px-3 rounded-md'
                                             {...register(`values.${index}.year`, { required: true })}
@@ -603,8 +593,6 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                         type={"email"}
                                         id={`input-${index}`}
                                         className='text-sm py-2 px-4 rounded-md border border-[#CBCBCB] w-full'
-                                        // name='email'
-                                        // onChange={(e) => onChangeTextHandler(e, index)}
                                         {...register(`values.${index}.email`, {
                                             required: true,
                                             validate: () => validateEmail(getValues(`values.${index}.email`))
@@ -764,7 +752,9 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                 </div>
                             </div>
                         </fieldset>
+                    
                         <div className='flex justify-end text-white'>
+                            {/* enable save button when all elements are filled */}
                             {!getSavedForm(index).includes(index) ?
                                 <button
                                     id={`save-button-${index}`}
@@ -872,13 +862,9 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                         </button>
                     </div>
                 
-                    {showSubmitButton(
-                        isChecked,
-                        isSavedArraySelector,
-                        getValues('values'),
-                        getValues('cooperate')) &&
+                    { releaseSubmitButton() &&
                         <button
-                            disabled={isValid}
+                            //disabled={isValid}
                             className='md:w-fit w-full text-center bg-[#16C807] justify-self-end
                             rounded-md outline-none px-4 h-fit py-2.5 text-xs text-white font-semibold gap-1
                             disabled:bg-[#EFF0F6] 

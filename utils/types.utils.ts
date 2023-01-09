@@ -182,3 +182,47 @@ export interface CreateBusinessNameRegPartnerType {
 	businessNamePartnerId?: string;
 	businessNameRegistrationId: string;
 }
+
+export interface IndividualFormType{
+	firstName: string,
+    lastName: string,
+    otherName: string,
+    address: string,
+    state: string,
+    lga: string,
+    city: string,
+    occupation: string,
+    nationality: string,
+    day: string,
+    month: string,
+    year: string,
+    email: string,
+    telephoneNumber: string,
+    signature: string | any,
+    passport: string | any,
+    meansOfId: string | any,
+    certificate: string | any,
+    isSaved : boolean
+}
+
+export interface CooperateFormType{
+	companyName: string,
+    rcNumber: string,
+    directorName: string,
+    address: string,
+    state: string,
+    lga?: string,
+    city?: string,
+    occupation: string,
+    nationality: string,
+    day: string,
+    month: string,
+    year: string,
+    email: string,
+    telephoneNumber: string,
+    signature: string | any,
+    passport: string | any,
+    meansOfId: string | any,
+    certificate: string | any,
+    isSaved ?: boolean
+}

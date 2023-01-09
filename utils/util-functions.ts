@@ -1,3 +1,5 @@
+import { CooperateFormType, IndividualFormType } from "./types.utils";
+
 //validate user email
 export function validateEmail(email: string): boolean {
 	const re: RegExp =
@@ -94,4 +96,20 @@ export function showSubmitButton(
 			return true;
 		}
 		return false;
+	}
+
+	export function formUseEffect(
+		values : IndividualFormType | CooperateFormType, 
+		elementId : string){
+		
+		const saveButton = document.getElementById(`${elementId}`) as HTMLButtonElement;
+		if(!saveButton){
+			return;
+		}
+		const isNotEmpty = Object.values(values).every((value : any) => value !== "");
+		if(isNotEmpty){
+			saveButton.disabled = false;
+		}else{
+			saveButton.disabled = true;
+		}
 	}
