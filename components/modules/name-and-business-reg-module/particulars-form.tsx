@@ -7,7 +7,7 @@ import { ErrorInterfaceObj } from '../../../utils/constants';
 import { CooperateFormObject, DaysArray, MonthsArray, Years } from '../../../utils/collections';
 import { CooperateFormsComponent } from './cooperate-forms';
 import { useFieldArray, useForm } from 'react-hook-form';
-import { showSubmitButton, getFormLength, validateEmail, formUseEffect } from '../../../utils/util-functions';
+import { getFormLength, validateEmail, individualFormUseEffectHook, isValidUrl } from '../../../utils/util-functions';
 import { useSelector, useDispatch } from 'react-redux';
 import { AnyAction, Dispatch } from 'redux';
 import { addLgaData, setBusinessNameRegId, setCooperateFieldArrayLength, setFormsSaved, setIndividualFieldArrayLength, setNameRegFormValidState, setStateIdData } from '../../../redux/slices/app-slice';
@@ -15,7 +15,9 @@ import { createBusinessNameRegJob, deleteAxiosRequest, patchAxiosRequestWithHead
 import { AxiosError } from 'axios';
 import { initialErrorObj } from '../login-module/login-form';
 import { ComponentLoader } from '../componentLoader';
+import CircularProgress from '@mui/material/CircularProgress';
 import { IndividualFormType, CreateBusinessNameRegPartnerType, CooperateFormType } from '../../../utils/types.utils';
+import { NextRouter, useRouter } from 'next/router';
 
 const partnersObj : IndividualFormType = {
     firstName: "",
@@ -36,6 +38,7 @@ const partnersObj : IndividualFormType = {
     passport: "",
     meansOfId: "",
     certificate: "",
+    nation : "",
     isSaved : false
 };
 
@@ -46,6 +49,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
     });
     const [axiosResponse, setAxiosResponse] = React.useState<ErrorInterfaceObj>(initialErrorObj);
     const [requestStatus, isRequestSuccessful] = React.useState<any[]>([]);
+    const router : NextRouter = useRouter();
 
     const [state, setState] = React.useState<any>({
         open: true,
@@ -65,7 +69,6 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
     const getNameRegObjectSelector = useSelector((state: any) => state.store.businessNameRegistration);
     const getNameRegIdSelector = useSelector((state: any) => state.store.businessNameRegistrationId);
     const isValidBusinessForm = useSelector((state : any) => state.store.nameRegFormIsValid);
-    const isSavedArraySelector = useSelector((state : any) => state.store.isSavedArray);
     const dispatch: Dispatch<AnyAction> = useDispatch();
     
     const {
@@ -115,9 +118,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
         index : number
         ): Promise<string[]> => {
 
-        try {
-
-            
+        try { 
             const file = fileList.item(0);
             if (file) {
                 const uploadedFileResponse = await uploadFiles([file]);
@@ -195,24 +196,28 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
         setState({ ...state, open: false });
     };
 
-    const emptyFileInputField = (elementId: string, index: number) => {
-        //setValue(`${elementId}`, '');
+    const emptyFileInputField = (elementId: string, valueKey : string) => {
+        setValue(`${valueKey}`, '');
         document.getElementById(elementId)?.click();
     }
 
     const releaseSubmitButton = () => {
         const values = getValues('values') as IndividualFormType[];
         const cooperate = getValues('cooperate') as CooperateFormType[];
-
-        if(values && cooperate && values.length !== 0 &&
-        values.every((data : IndividualFormType) => data.isSaved === true)  &&
-        cooperate.length !== 0 &&
-        cooperate.every((data : CooperateFormType) => data.isSaved === true)
-        && isChecked && isValid
-        ){
-            return true;
-        }
-        return false;
+        //if the values array is populated, then wait until every last one is saved
+        //if the cooperate array is populated then wait until every last one is saved
+        //if check box is checked and form is valid
+        if((values && values.length !== 0 && values.every((data : IndividualFormType) => data.isSaved === true)
+            && isChecked && isValid) 
+        || (cooperate && cooperate.length !== 0 && cooperate.every((data : CooperateFormType) => data.isSaved === true)
+            && isChecked && isValid)
+        || (values && cooperate && values.length !== 0 && cooperate.length !== 0 
+            && values.every((data : IndividualFormType) => data.isSaved === true )
+            && cooperate.every((data : CooperateFormType) => data.isSaved === true)
+            && isChecked && isValid)){
+                return true;
+            }
+            return false;
     }
     const onSaveHandler = async (index: number) => {
         const saveButton = document.getElementById(`save-button-${index}`) as HTMLButtonElement;
@@ -222,6 +227,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
         const passport = getValues(`values.${index}.passport`).split('#')[0];
         const idCardLink = getValues(`values.${index}.meansOfId`).split('#')[0];
         const competenceCertificate = getValues(`values.${index}.certificate`).split('#')[0];
+        const isNation = getValues(`values.${index}.nation`) as string;
 
         if(!saveButton){
             return;
@@ -232,11 +238,11 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
             lastName: getValues(`values.${index}.lastName`),
             otherName: getValues(`values.${index}.otherName`),//data?.otherName,
             address: getValues(`values.${index}.address`),//data?.residentialAddress,
-            lgaId: '3a7e7bd2-6f7c-4945-adf3-89a1d564db08',//data?.lga,
+            lgaId: (isNation && isNation === 'Nigerian') ? '3a7e7bd2-6f7c-4945-adf3-89a1d564db08' : null,//data?.lga,
             city: getValues(`values.${index}.city`), //data?.city,
             dateOfBirth: new Date(`${getValues(`values.${index}.year`)}/${getValues(`values.${index}.month`)}/${getValues(`values.${index}.day`)} GMT`),
             occupation: getValues(`values.${index}.occupation`),//data?.occupation,
-            nationality: getValues(`values.${index}.nationality`),//data?.nationality,
+            nationality:(isNation && isNation === 'Nigerian')? isNation : getValues(`values.${index}.nationality`),//data?.nationality,
             email: getValues(`values.${index}.email`),//data?.email,
             phoneNumber: getValues(`values.${index}.telephoneNumber`),//data?.telephoneNumber,
             type: "INDIVIDUAL",
@@ -288,18 +294,18 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
         const passport = getValues(`values.${index}.passport`).split('#')[0];
         const idCardLink = getValues(`values.${index}.meansOfId`).split('#')[0];
         const competenceCertificate = getValues(`values.${index}.certificate`).split('#')[0];
-
+        const isNation = getValues(`values.${index}.nation`) as string;
 
         const savePartnerObj: Partial<CreateBusinessNameRegPartnerType> = {
             firstName: getValues(`values.${index}.firstName`),//data?.firstName,
             lastName: getValues(`values.${index}.lastName`),
             otherName: getValues(`values.${index}.otherName`),//data?.otherName,
             address: getValues(`values.${index}.address`),//data?.residentialAddress,
-            lgaId: '3a7e7bd2-6f7c-4945-adf3-89a1d564db08',//data?.lga,
+            lgaId: (isNation && isNation === 'Nigerian') ? '3a7e7bd2-6f7c-4945-adf3-89a1d564db08' : null,//data?.lga,
             city: getValues(`values.${index}.city`), //data?.city,
             dateOfBirth: new Date(`${getValues(`values.${index}.year`)}/${getValues(`values.${index}.month`)}/${getValues(`values.${index}.day`)} GMT`),
             occupation: getValues(`values.${index}.occupation`),//data?.occupation,
-            nationality: getValues(`values.${index}.nationality`),//data?.nationality,
+            nationality:(isNation && isNation === 'Nigerian')? isNation : getValues(`values.${index}.nationality`),//data?.nationality,
             email: getValues(`values.${index}.email`),//data?.email,
             phoneNumber: getValues(`values.${index}.telephoneNumber`),//data?.telephoneNumber,
             type: "INDIVIDUAL",
@@ -356,7 +362,8 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
 
     }
    
-    const onSubmitIndividualHandler = async (data: any) => {
+    const onSubmitIndividualHandler = async () => {
+        //handleSubmit(onSubmitIndividualHandler)
         const requestBody = {
             uri : 'job/job/update-business-name-reg',
             body : getNameRegObjectSelector
@@ -366,7 +373,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
             const {data : {data, message, code,success}} = res;
             if(success && code === 200){
                 //submit successful
-                alert(message);
+                router.push('/invoice');
             }
         }).catch((err : AxiosError) => {
             axiosError(err);
@@ -389,20 +396,8 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
         const subscription = watch((value, { name, type }) => {
             //get index of currently target to either disable or enable save button
             const sliptNames : string[] = name?.split('') as string[];
-            console.log({at : sliptNames.at(7)});
             const index : number = parseInt(sliptNames.at(7) as string);
-            formUseEffect(value.values[index],`save-button-${index}`);
-
-            // const saveButton = document.getElementById(`save-button-${index}`) as HTMLButtonElement;
-            // if(!saveButton){
-            //     return;
-            // }
-            // const isNotEmpty = Object.values(value.values[index]).every((value : any) => value !== "");
-            // if(isNotEmpty){
-            //     saveButton.disabled = false;
-            // }else{
-            //     saveButton.disabled = true;
-            // }
+            individualFormUseEffectHook(value.values[index],`save-button-${index}`);
         });
         return () => subscription.unsubscribe();
     }, [
@@ -427,7 +422,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                     />
                 </Snackbar>
             }
-            <form className='my-8' onSubmit={handleSubmit(onSubmitIndividualHandler)}>
+            <form className='my-8' onSubmit={(e) => e.preventDefault()}>
                 <p className='text-[#6157A0] text-xl font-bold py-4'>Particulars</p>
                 {fields && fields.map((data: any, index: number) =>
                     <div
@@ -480,43 +475,17 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
 
                             {/* location details*/}
                             <div className='w-full flex flex-col md:flex-row gap-4 text-xs text-black'> 
-                                <div className='flex flex-col md:w-1/3 w-full'>
-                                    <p className='font-bold'>State</p>
+                                <div className='flex flex-col md:w-4/5 w-full'>
+                                    <p className='font-bold'>Nationality</p>
                                     <select
                                         className='w-full border border-[#CBCBCB] py-2 px-3 rounded-md'
-                                        id={`select-${index}`}
-                                        {...register(`values.${index}.state`, {
-                                            required: true,
-                                            //onChange : (e) => dispatch(setStateIdData(e.target.value))
-                                        })}
-                                    >
-                                        <option value="state" selected>Select State</option>
-                                        {stateSelector && stateSelector?.map((state: any, i: number) =>
-                                            <option value={state.id} key={i}
-                                                onClick={() => dispatch(addLgaData(state.lgasForThisState))}>
-                                                {state.name}
-                                            </option>
-                                        )}
+                                        {...register(`values.${index}.nation`, { required: true})}>
+                                        <option value="" selected>Select Nationality</option>
+                                        <option value="Nigerian">NIGERIAN</option>
+                                        <option value="Non-Nigerian">NON-NIGERIAN</option>
                                     </select>
                                 </div>
-
-                                <div className='flex flex-col md:w-1/3 w-full'>
-                                    <p className='font-bold'>LGA</p>
-                                    <select
-                                        className='w-full border border-[#CBCBCB] py-2 px-3 rounded-md'
-                                        id={`select-${index}`}
-                                        {...register(`values.${index}.lga`, { required: true,})}>
-
-                                        <option value="LGA" selected>Select LGA</option>
-                                        <option value="LGA">Vandekya</option>
-                                        <option value="LGA">Bende</option>
-                                        {/* {lgaSelector && lgaSelector?.map((lga: any, i: number) =>
-                                            <option value={lga.id} key={i}>
-                                                {lga.name}
-                                            </option>
-                                        )} */}
-                                    </select>
-                                </div>
+                                
                                 <div className='flex flex-col md:w-1/3 w-full'>
                                     <p className='font-bold'>City</p>
                                     <input
@@ -528,7 +497,60 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                 </div>
                             </div>
                             {/* occupation and nationality */}
-                            <div className='w-full md:w-[66%] flex flex-col md:flex-row gap-4 text-xs text-black my-4'>
+                            <div className='w-full md:w-auto flex flex-col md:flex-row gap-4 text-xs text-black my-4'>
+                                {getValues(`values.${index}.nation`) === 'Nigerian'
+                                    ?
+                                    <>
+                                    <div className='flex flex-col md:w-[38%] w-full'>
+                                        <p className='font-bold'>State</p>
+                                        <select
+                                            className='w-full border border-[#CBCBCB] py-2 px-3 rounded-md'
+                                            //id={`select-${index}`}
+                                            {...register(`values.${index}.state`, {
+                                                required: true,
+                                            })}
+                                        >
+                                            <option value="" selected>Select State</option>
+                                            <option value="akwa">AKWAIBOM</option>
+
+                                            {stateSelector && stateSelector?.map((state: any, i: number) =>
+                                                <option value={state.id} key={i}
+                                                    onClick={() => dispatch(addLgaData(state.lgasForThisState))}>
+                                                    {state.name}
+                                                </option>
+                                            )}
+                                        </select>
+                                    </div>
+
+                                    <div className='flex flex-col md:w-[38%] w-full'>
+                                        <p className='font-bold'>LGA</p>
+                                        <select
+                                            className='w-full border border-[#CBCBCB] py-2 px-3 rounded-md'
+                                            //id={`select-${index}`}
+                                            {...register(`values.${index}.lga`, { required: true,})}>
+
+                                            <option value="lga" selected>Select LGA</option>
+                                            <option value="LGA">VANDEKYA</option>
+                                            <option value="LGA">NNKANU</option>
+                                            {/* {lgaSelector && lgaSelector?.map((lga: any, i: number) =>
+                                                <option value={lga.id} key={i}>
+                                                    {lga.name}
+                                                </option>
+                                            )} */}
+                                        </select>
+                                    </div>
+                                    </>
+                                    :
+                                    <div className='flex flex-col md:w-1/2 w-full'>
+                                        <p className='font-bold'>Nationality</p>
+                                        <input
+                                            type="text"
+                                            id={`input-${index}`}
+                                            className='py-2 text-sm px-4 rounded-md border border-[#CBCBCB] w-full'
+                                            {...register(`values.${index}.nationality`, { required: true })}
+                                        />
+                                    </div>
+                                }
                                 <div className='flex flex-col md:w-1/2 w-full'>
                                     <p className='font-bold'>Occupation</p>
                                     <input
@@ -536,15 +558,6 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                         id={`input-${index}`}
                                         className='text-sm py-2 px-4 rounded-md border border-[#CBCBCB] w-full'
                                         {...register(`values.${index}.occupation`, { required: true })}
-                                    />
-                                </div>
-                                <div className='flex flex-col md:w-1/2 w-full'>
-                                    <p className='font-bold'>Nationality</p>
-                                    <input
-                                        type="text"
-                                        id={`input-${index}`}
-                                        className='py-2 text-sm px-4 rounded-md border border-[#CBCBCB] w-full'
-                                        {...register(`values.${index}.nationality`, { required: true })}
                                     />
                                 </div>
                             </div>
@@ -643,7 +656,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                         </div>
                                         :
                                         <div className='cursor-pointer text-[#FF2D2D] w-fit flex flex-row items-center gap-1'
-                                            onClick={() => emptyFileInputField(`signature-${index}`, index)}>
+                                            onClick={() => emptyFileInputField(`signature-${index}`, `values.${index}.signature`)}>
                                             <object data="/delete.png" className='w-4 h-4 object-contain' />
                                             <p>Delete</p>
                                         </div>
@@ -675,7 +688,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                         </div>
                                         :
                                         <div className='cursor-pointer text-[#FF2D2D] w-fit flex flex-row items-center gap-1'
-                                            onClick={() => emptyFileInputField(`passport-${index}`, index)}>
+                                            onClick={() => emptyFileInputField(`passport-${index}`,`values.${index}.passport`)}>
                                             <object data="/delete.png" className='w-4 h-4 object-contain' />
                                             <p>Delete</p>
                                         </div>
@@ -707,17 +720,18 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                         </div>
                                         :
                                         <div className='cursor-pointer text-[#FF2D2D] w-fit flex flex-row items-center gap-1'
-                                            onClick={() => emptyFileInputField(`meansOfId-${index}`, index)}>
+                                            onClick={() => emptyFileInputField(`meansOfId-${index}`,`values.${index}.meansOfId`)}>
                                             <object data="/delete.png" className='w-4 h-4 object-contain' />
                                             <p>Delete</p>
                                         </div>
                                     }
+                                    
                                 </div>
 
                                 <div className="flex justify-between gap-2 
-                                items-center py-2 px-4 bg-[#FFFAFA] 
-                                text-xs text-black 
-                                font-semibold rounded">
+                                    items-center py-2 px-4 bg-[#FFFAFA] 
+                                    text-xs text-black 
+                                    font-semibold rounded">
                                     <input
                                         type="file"
                                         accept=".jpg,.jpeg,.png"
@@ -734,7 +748,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                     <p>Certificate&nbsp;Of&nbsp;Competence:</p>
 
                                     <div className='text-black'>{getFileValueName(`values.${index}.certificate`)}</div>
-                                    {!getValues(`values.${index}.certificate`)?
+                                    {!getValues(`values.${index}.certificate`) ?
                                         <div className='cursor-pointer hover:text-[#1976D2] w-fit flex flex-row items-center gap-1'
                                             onClick={() => {
                                                 document.getElementById(`certificate-${index}`)?.click();
@@ -742,12 +756,11 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                             <FileUploadOutlinedIcon sx={{ fontSize: '18px' }} />
                                             <p>Upload</p>
                                         </div>
-                                        :
-                                        <div className='cursor-pointer text-[#FF2D2D] w-fit flex flex-row items-center gap-1'
-                                            onClick={() => emptyFileInputField(`certificate-${index}`, index)}>
-                                            <object data="/delete.png" className='w-4 h-4 object-contain' />
-                                            <p>Delete</p>
-                                        </div>
+                                    : <div className='cursor-pointer text-[#FF2D2D] w-fit flex flex-row items-center gap-1'
+                                        onClick={() => emptyFileInputField(`certificate-${index}`,`values.${index}.certificate`)}>
+                                        <object data="/delete.png" className='w-4 h-4 object-contain' />
+                                        <p>Delete</p>
+                                    </div>
                                     }
                                 </div>
                             </div>
@@ -756,6 +769,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                         <div className='flex justify-end text-white'>
                             {/* enable save button when all elements are filled */}
                             {!getSavedForm(index).includes(index) ?
+                            <div className='flex justify-end gap-2 text-white'>
                                 <button
                                     id={`save-button-${index}`}
                                     className='bg-[#2B85F0] rounded-md outline-none 
@@ -768,6 +782,18 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                                     <SaveOutlinedIcon sx={{ fontSize: '15px' }} />
                                     <p>Save</p>
                                 </button>
+                                <button
+                                    className='bg-[#FF2D2D] rounded-md
+                                        text-white outline-none 
+                                        px-4 py-2 text-xs flex flex-row 
+                                        items-center font-semibold gap-1
+                                        disabled:bg-[#EFF0F6] 
+                                        disabled:shadow-none 
+                                        disabled:text-gray-500 disabled:cursor-default'
+                                    onClick={() => remove(index)}>
+                                    Delete
+                                </button>
+                            </div>
                                 :
                                 <div className='flex flex-row items-center gap-4'>
                                     <button
@@ -865,6 +891,8 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                     { releaseSubmitButton() &&
                         <button
                             //disabled={isValid}
+                            type='button'
+                            onClick={onSubmitIndividualHandler}
                             className='md:w-fit w-full text-center bg-[#16C807] justify-self-end
                             rounded-md outline-none px-4 h-fit py-2.5 text-xs text-white font-semibold gap-1
                             disabled:bg-[#EFF0F6] 

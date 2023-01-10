@@ -121,5 +121,6 @@ export const CooperateFormObject : CooperateFormType = {
     passport: "",
     meansOfId: "",
     certificate: "",
+	nation : "",
     isSaved : false
 }

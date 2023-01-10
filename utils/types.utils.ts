@@ -167,7 +167,7 @@ export interface CreateBusinessNameRegPartnerType {
 	companyName?: string;
 	nameOfDirector: string;
 	address: string;
-	lgaId: string;
+	lgaId: string | null;
 	city: string;
 	dateOfBirth: Date;
 	occupation: string;
@@ -184,45 +184,47 @@ export interface CreateBusinessNameRegPartnerType {
 }
 
 export interface IndividualFormType{
-	firstName: string,
-    lastName: string,
-    otherName: string,
-    address: string,
-    state: string,
-    lga: string,
-    city: string,
-    occupation: string,
-    nationality: string,
-    day: string,
-    month: string,
-    year: string,
-    email: string,
-    telephoneNumber: string,
-    signature: string | any,
-    passport: string | any,
-    meansOfId: string | any,
-    certificate: string | any,
-    isSaved : boolean
+	firstName: string;
+    lastName: string;
+    otherName: string;
+    address: string;
+    state ?: string;
+    lga ?: string;
+    city?: string;
+    occupation: string;
+    nationality?: string;
+    day: string;
+    month: string;
+    year: string;
+    email: string;
+    telephoneNumber: string;
+    signature: string | any;
+    passport: string | any;
+    meansOfId: string | any;
+    certificate: string | any;
+	nation : string;
+    isSaved : boolean;
 }
 
 export interface CooperateFormType{
-	companyName: string,
-    rcNumber: string,
-    directorName: string,
-    address: string,
-    state: string,
-    lga?: string,
-    city?: string,
-    occupation: string,
-    nationality: string,
-    day: string,
-    month: string,
-    year: string,
-    email: string,
-    telephoneNumber: string,
-    signature: string | any,
-    passport: string | any,
-    meansOfId: string | any,
-    certificate: string | any,
+	companyName: string;
+    rcNumber: string;
+    directorName: string;
+    address: string;
+    state?: string;
+    lga?: string;
+    city?: string;
+    occupation: string;
+    nationality ?: string;
+    day: string;
+    month: string;
+    year: string;
+    email: string;
+    telephoneNumber: string;
+    signature: string | any;
+    passport: string | any;
+    meansOfId: string | any;
+    certificate: string | any;
+	nation : string;
     isSaved ?: boolean
 }

@@ -21,6 +21,16 @@ export function validatePassword(password: string): boolean {
 	return exp.test(password);
 }
 
+export const isValidUrl = (urlString : string) => {
+	var urlPattern = new RegExp('^(https?:\\/\\/)?'+ // validate protocol
+	'((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // validate domain name
+	'((\\d{1,3}\\.){3}\\d{1,3}))'+ // validate OR ip (v4) address
+	'(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // validate port and path
+	'(\\?[;&a-z\\d%_.~+=-]*)?'+ // validate query string
+	'(\\#[-a-z\\d_]*)?$','i'); // validate fragment locator
+	return urlPattern.test(urlString);
+}
+
 export function defineDocument() {
 	const document = window.document;
 	if (typeof document === undefined || typeof window === undefined) return;
@@ -98,18 +108,63 @@ export function showSubmitButton(
 		return false;
 	}
 
-	export function formUseEffect(
-		values : IndividualFormType | CooperateFormType, 
+	export function individualFormUseEffectHook(
+		values : IndividualFormType, 
 		elementId : string){
 		
 		const saveButton = document.getElementById(`${elementId}`) as HTMLButtonElement;
 		if(!saveButton){
 			return;
 		}
-		const isNotEmpty = Object.values(values).every((value : any) => value !== "");
-		if(isNotEmpty){
-			saveButton.disabled = false;
-		}else{
-			saveButton.disabled = true;
+		
+		const newObject = values;
+
+		if(newObject?.nation !== 'Nigerian'){
+			delete newObject['state'];
+			delete newObject['lga'];
+			const isNotEmpty = Object.values(newObject).every((value : any) => value !== "");
+			if(isNotEmpty){
+				saveButton.disabled = false;
+			}else{
+				saveButton.disabled = true;
+			}
+		}else{	
+			delete newObject['nationality'];
+			const isNotEmpty = Object.values(values).every((value : any) => value !== "");
+			if(isNotEmpty){
+				saveButton.disabled = false;
+			}else{
+				saveButton.disabled = true;
+			}
 		}
+	}
+
+	export function cooperateFormUseEffectHook(
+		values : CooperateFormType,
+		elementId : string
+	){
+		const saveButton = document.getElementById(elementId) as HTMLButtonElement;
+		if(!saveButton){return;}
+
+		const newObject = values;
+
+		if(newObject?.nation !== 'Nigerian'){
+			delete newObject['state'];
+			delete newObject['lga'];
+			const isNotEmpty = Object.values(newObject).every((value : any) => value !== "");
+			if(isNotEmpty){
+				saveButton.disabled = false;
+			}else{
+				saveButton.disabled = true;
+			}
+		} else{
+			delete newObject['nationality'];
+			const isNotEmpty = Object.values(newObject).every((value : any) => value !== "");
+			if(isNotEmpty){
+				saveButton.disabled = false;
+			}else{
+				saveButton.disabled = true;
+			}	
+		} 
+		
 	}
