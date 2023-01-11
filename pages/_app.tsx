@@ -1,7 +1,7 @@
 import '../styles/globals.css'
 import type { AppProps } from 'next/app'
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
-import { Provider } from 'react-redux';
+import { Provider, useSelector } from 'react-redux';
 import store from '../redux/store';
 import AppProvider from '../components/app-context';
 
@@ -15,9 +15,9 @@ const queryClient = new QueryClient({
   }
 });
 
-function MyApp({ Component, pageProps }: AppProps) {
 
-  return (
+function MyApp({ Component, pageProps }: AppProps) {
+    return (
     <QueryClientProvider client={queryClient}>
       <Provider store={store}>
         <AppProvider>
@@ -27,5 +27,4 @@ function MyApp({ Component, pageProps }: AppProps) {
     </QueryClientProvider>
   );
 }
-
 export default MyApp

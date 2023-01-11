@@ -32,8 +32,9 @@ export const returnValues = () :SidebarElementValuesObject => {
 
 type Props={
     children : JSX.Element;
+    title : string;
 }
-const DashboardLayout : FC<Props> = ({children}) => {
+const DashboardLayout : FC<Props> = ({children, title}) => {
     
     const router : NextRouter = useRouter();
     const selector = useSelector((state : any) => state.store.data);
@@ -48,7 +49,7 @@ const DashboardLayout : FC<Props> = ({children}) => {
                 image={selector?.profileImage}
                 />
                 <main className='flex-1 bg-white'>
-                    <DashboardTopBar pageTitle='New Registration'
+                    <DashboardTopBar pageTitle={title}
                     user={{
                             firstName : selector?.userFirstName,
                             lastName : selector?.userLastName,

@@ -122,7 +122,7 @@ export function showSubmitButton(
 		if(newObject?.nation !== 'Nigerian'){
 			delete newObject['state'];
 			delete newObject['lga'];
-			const isNotEmpty = Object.values(newObject).every((value : any) => value !== "");
+			const isNotEmpty = Object.values(newObject).every((value : any) => value !== "" && typeof value === "string");
 			if(isNotEmpty){
 				saveButton.disabled = false;
 			}else{
@@ -130,7 +130,7 @@ export function showSubmitButton(
 			}
 		}else{	
 			delete newObject['nationality'];
-			const isNotEmpty = Object.values(values).every((value : any) => value !== "");
+			const isNotEmpty = Object.values(values).every((value : any) => value !== "" && typeof value === "string");
 			if(isNotEmpty){
 				saveButton.disabled = false;
 			}else{
@@ -151,7 +151,7 @@ export function showSubmitButton(
 		if(newObject?.nation !== 'Nigerian'){
 			delete newObject['state'];
 			delete newObject['lga'];
-			const isNotEmpty = Object.values(newObject).every((value : any) => value !== "");
+			const isNotEmpty = Object.values(newObject).every((value : any) => value !== "" && typeof value === "string");
 			if(isNotEmpty){
 				saveButton.disabled = false;
 			}else{
@@ -159,7 +159,7 @@ export function showSubmitButton(
 			}
 		} else{
 			delete newObject['nationality'];
-			const isNotEmpty = Object.values(newObject).every((value : any) => value !== "");
+			const isNotEmpty = Object.values(newObject).every((value : any) => value !== "" && typeof value === "string");
 			if(isNotEmpty){
 				saveButton.disabled = false;
 			}else{

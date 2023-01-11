@@ -149,7 +149,7 @@ export const DashboardTopBar :FC<Props> = ({pageTitle, showControls = true, user
                                     fontSize : '22px',
                                     background : '#F0EEF6',
                                     borderRadius : '100%',
-                                    padding : '2px'
+                                    padding : '1px'
                                 }}/>
                             </IconButton>
                             <IconButton>
@@ -165,13 +165,17 @@ export const DashboardTopBar :FC<Props> = ({pageTitle, showControls = true, user
                                         fontSize : '22px',
                                         background : '#F0EEF6',
                                         borderRadius : '100%',
-                                        padding : '2px'
+                                        padding : '1px'
                                     }}/>
                                 </Badge>
                             </IconButton>
 
-                            <button className="px-3 py-2.5 bg-[#FF2D2D] text-xs font-semibold text-white outline-none rounded-lg
-                            transition duration-300 delay-200 hover:bg-[#D30000]"
+                            <button className="px-3 py-2.5 bg-[#FF2D2D] text-xs 
+                            font-semibold text-white rounded-lg
+                            transition duration-300 delay-200 border
+                            hover:bg-[#D30000]
+                            hover:bg-white hover:text-[#D30000] 
+                            hover:border-[#D30000]"
                             onClick={logoutHandler}>
                                 Logout
                             </button>

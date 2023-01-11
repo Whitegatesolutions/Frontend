@@ -14,7 +14,7 @@ const NewRegistrationModule = () : JSX.Element => {
         }
     }
     return(
-        <DashboardLayout>
+        <DashboardLayout title="New Registration">
             <div className="w-full flex justify-center lg:justify-start lg:ml-8">
                 {/* List of business registrations */}
                <div className="w-11/12 mt-4 mb-8">

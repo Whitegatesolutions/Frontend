@@ -373,7 +373,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
             const {data : {data, message, code,success}} = res;
             if(success && code === 200){
                 //submit successful
-                router.push('/invoice');
+                router.push('/new-registration/invoice');
             }
         }).catch((err : AxiosError) => {
             axiosError(err);
