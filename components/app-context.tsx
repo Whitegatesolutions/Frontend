@@ -60,7 +60,8 @@ export default function AppProvider({ children }: Props): JSX.Element {
         dispatch(addUserData({
             userFirstName : data?.data?.data.firstName,
             userLastName : data?.data?.data.lastName,
-            profileImage : data?.data?.data.profileImageUrl
+            profileImage : data?.data?.data.profileImageUrl,
+            email : data?.data?.data?.email
         }));
     }
 

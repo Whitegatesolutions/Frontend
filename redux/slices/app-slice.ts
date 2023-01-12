@@ -4,6 +4,7 @@ interface AppSubState {
 	userFirstName: string;
 	userLastName: string;
 	profileImage: string;
+	email: string;
 }
 
 export interface BusinessNameRegInterface {
@@ -26,6 +27,7 @@ export interface AppGlobalState {
 	businessNameRegistrationId: string;
 	nameRegFormIsValid: boolean;
 	isSavedArray: boolean[];
+	jobId: string;
 	//userData : object;
 }
 
@@ -34,6 +36,7 @@ const initialState: AppGlobalState = {
 		userFirstName: '',
 		userLastName: '',
 		profileImage: '',
+		email: '',
 	},
 	state: [],
 	lga: [],
@@ -51,6 +54,7 @@ const initialState: AppGlobalState = {
 	businessNameRegistrationId: '',
 	nameRegFormIsValid: false,
 	isSavedArray: [],
+	jobId: '',
 };
 
 const appDataSlice: Slice<AppGlobalState> = createSlice({
@@ -91,8 +95,11 @@ const appDataSlice: Slice<AppGlobalState> = createSlice({
 				state.isSavedArray.push(action.payload);
 			} else {
 				//remove car from the colors array
-				state.isSavedArray.splice(state.isSavedArray.length -1,1);
+				state.isSavedArray.splice(state.isSavedArray.length - 1, 1);
 			}
+		},
+		setJobId(state: AppGlobalState, action: any) {
+			state.jobId = action.payload;
 		},
 	},
 });
@@ -108,6 +115,7 @@ export const {
 	setBusinessNameRegId,
 	setNameRegFormValidState,
 	setFormsSaved,
+	setJobId,
 } = appDataSlice.actions;
 
 export default appDataSlice.reducer;

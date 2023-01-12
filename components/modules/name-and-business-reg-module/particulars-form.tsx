@@ -10,12 +10,11 @@ import { useFieldArray, useForm } from 'react-hook-form';
 import { getFormLength, validateEmail, individualFormUseEffectHook, isValidUrl } from '../../../utils/util-functions';
 import { useSelector, useDispatch } from 'react-redux';
 import { AnyAction, Dispatch } from 'redux';
-import { addLgaData, setBusinessNameRegId, setCooperateFieldArrayLength, setFormsSaved, setIndividualFieldArrayLength, setNameRegFormValidState, setStateIdData } from '../../../redux/slices/app-slice';
+import { addLgaData, setBusinessNameRegId, setCooperateFieldArrayLength, setFormsSaved, setIndividualFieldArrayLength, setJobId, setNameRegFormValidState, setStateIdData } from '../../../redux/slices/app-slice';
 import { createBusinessNameRegJob, deleteAxiosRequest, patchAxiosRequestWithHeader, postAxiosRequestWithHeader, postAxiosRequestWithHeaderForBusinessReg, uploadFiles } from '../../../utils/axios-requests';
 import { AxiosError } from 'axios';
 import { initialErrorObj } from '../login-module/login-form';
 import { ComponentLoader } from '../componentLoader';
-import CircularProgress from '@mui/material/CircularProgress';
 import { IndividualFormType, CreateBusinessNameRegPartnerType, CooperateFormType } from '../../../utils/types.utils';
 import { NextRouter, useRouter } from 'next/router';
 
@@ -73,7 +72,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
     
     const {
         register,
-        formState: { isValid, isSubmitting, isSubmitSuccessful },
+        formState: { isValid, isSubmitSuccessful },
         control,
         handleSubmit,
         setError,
@@ -93,6 +92,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
         control,
         name: "cooperate"
     });
+    const [isSubmitting, setSubmitting] = React.useState(false);
 
     const axiosError = (err : AxiosError) => {
         if(err.isAxiosError){
@@ -154,6 +154,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                 appendToCooperate(CooperateFormObject);
                 dispatch(setCooperateFieldArrayLength(fieldsArray.length));
                 dispatch(setBusinessNameRegId(data.businessNameRegistrationId));
+                dispatch(setJobId(data.id));
                 form.className = "saveForm my-8";
                 //fieldset.disabled = true;
             }
@@ -182,6 +183,7 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
                 append(partnersObj);
                 dispatch(setIndividualFieldArrayLength(fields.length));
                 dispatch(setBusinessNameRegId( data.businessNameRegistrationId));
+                dispatch(setJobId(data.id));
                 form.className = "saveForm my-8";
                 //fieldset.disabled = true;
             }
@@ -202,22 +204,25 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
     }
 
     const releaseSubmitButton = () => {
-        const values = getValues('values') as IndividualFormType[];
-        const cooperate = getValues('cooperate') as CooperateFormType[];
-        //if the values array is populated, then wait until every last one is saved
-        //if the cooperate array is populated then wait until every last one is saved
-        //if check box is checked and form is valid
-        if((values && values.length !== 0 && values.every((data : IndividualFormType) => data.isSaved === true)
-            && isChecked && isValid) 
-        || (cooperate && cooperate.length !== 0 && cooperate.every((data : CooperateFormType) => data.isSaved === true)
-            && isChecked && isValid)
-        || (values && cooperate && values.length !== 0 && cooperate.length !== 0 
-            && values.every((data : IndividualFormType) => data.isSaved === true )
-            && cooperate.every((data : CooperateFormType) => data.isSaved === true)
-            && isChecked && isValid)){
-                return true;
-            }
-            return false;
+        if(isChecked && isValid){
+            return true;
+        }
+        // const values = getValues('values') as IndividualFormType[];
+        // const cooperate = getValues('cooperate') as CooperateFormType[];
+        // //if the values array is populated, then wait until every last one is saved
+        // //if the cooperate array is populated then wait until every last one is saved
+        // //if check box is checked and form is valid
+        // if((values && values.length !== 0 && values.every((data : IndividualFormType) => data.isSaved === true)
+        //     && isChecked && isValid) 
+        // || (cooperate && cooperate.length !== 0 && cooperate.every((data : CooperateFormType) => data.isSaved === true)
+        //     && isChecked && isValid)
+        // || (values && cooperate && values.length !== 0 && cooperate.length !== 0 
+        //     && values.every((data : IndividualFormType) => data.isSaved === true )
+        //     && cooperate.every((data : CooperateFormType) => data.isSaved === true)
+        //     && isChecked && isValid)){
+        //         return true;
+        //     }
+        //     return false;
     }
     const onSaveHandler = async (index: number) => {
         const saveButton = document.getElementById(`save-button-${index}`) as HTMLButtonElement;
@@ -363,19 +368,35 @@ export const BusinessRegistrationParticularsForm = (): JSX.Element => {
     }
    
     const onSubmitIndividualHandler = async () => {
-        //handleSubmit(onSubmitIndividualHandler)
+        //handleSubmit(onSubmitIndividualHandler)'
+        const {firstNameSuggestion, 
+            secondNameSuggestion,
+            businessAddress, 
+            phoneNumber, 
+            email} 
+            = getNameRegObjectSelector;
         const requestBody = {
             uri : 'job/job/update-business-name-reg',
-            body : getNameRegObjectSelector
+            body : {
+                firstNameSuggestion,
+                secondNameSuggestion,
+                businessAddress,
+                email,
+                phoneNumber,
+                businessNameRegistrationId: getNameRegIdSelector,
+                status: true
+            }
         }
+        setSubmitting(true);
         await patchAxiosRequestWithHeader(requestBody)
         .then((res) => {
             const {data : {data, message, code,success}} = res;
             if(success && code === 200){
-                //submit successful
+                setSubmitting(false);
                 router.push('/new-registration/invoice');
             }
         }).catch((err : AxiosError) => {
+            setSubmitting(false);
             axiosError(err);
         });
     }

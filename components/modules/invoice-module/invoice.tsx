@@ -8,27 +8,27 @@ import { initialErrorObj } from "../login-module/login-form";
 import { useQuery } from "@tanstack/react-query";
 import {usePaystackPayment} from 'next-paystack';
 import { PaystackProps } from "next-paystack/dist/types";
+import { CircularProgress } from "@mui/material";
 
 const KOBO = 0.611958;
 export const InvoicePageComponent = () : JSX.Element => {
-
+    //0d81e166-ec9f-42d4-bd5c-df42765fb788
     const getNameRegIdSelector = useSelector((state: any) => state.store.businessNameRegistrationId);
-    //const [axiosResponse, setAxiosResponse] = React.useState<ErrorInterfaceObj>(initialErrorObj);
-    const { data, isFetched} = useQuery(
-        {
+    const user = useSelector((state : any) => state.store.data);
+    const jobId = useSelector((state : any) => state.store.jobId);
+    const { data, isFetched, isLoading} = useQuery({
             queryKey: ['get-invoice-data'],
-            queryFn: () => getAxiosRequestWithAuthorizationHeader(`pricing/calculate-price/for-job/${getNameRegIdSelector}`),
+            queryFn: () => getAxiosRequestWithAuthorizationHeader(`pricing/calculate-price/for-job/${jobId}`),
             refetchOnWindowFocus: false
         }
     );
-
+    
     const config : PaystackProps = {
         reference: (new Date()).getTime().toString(),
-        email: isFetched && data?.data?.job?.user?.email,
-        amount: data?.data?.totalPrice * KOBO,
+        email: user?.email,
+        amount: data?.data?.data?.totalPrice * 100,
         publicKey: 'pk_test_841d55e1c32a4ca73dfb721a2aa63bdde4a30b50',
     };
-    
     const initializePayment = usePaystackPayment(config);
     // you can call this function anything
     const onSuccess = (reference : any) => {
@@ -41,38 +41,9 @@ export const InvoicePageComponent = () : JSX.Element => {
       // implementation for  whatever you want to do when the Paystack dialog closed.
       console.log('closed');
     }
-
-    // const axiosError = (err: AxiosError) => {
-    //     if (err.isAxiosError) {
-    //         if (!err?.response?.data) {
-    //             alert(err.message);
-    //             return;
-    //         }
-    //         if (err?.response?.data) {
-    //             const { data: { success, message, code } } = err.response as any;
-    //             if (!success && code !== 200) {
-    //                 setAxiosResponse({ ...axiosResponse, msg: message, isError: true });
-    //                 setTimeout(() => {
-    //                     setAxiosResponse({ ...axiosResponse, msg: "", isError: false });
-    //                 }, 4000);
-    //             }
-    //         }
-    //     }
-    // }
-
-    // React.useEffect(() => {
-    //     const uri : string = `pricing/calculate-price/for-job/${getNameRegIdSelector}`;
-    //     getAxiosRequestWithAuthorizationHeader(uri)
-    //     .then((res) => {
-    //         const {data : {data, message, code, success}} = res;
-    //         if(code === 200 && success){
-    //             //set data to state
-    //             setState({...data});
-    //         }
-    //     }).catch((err : AxiosError) => {
-    //         axiosError(err);
-    //     })
-    // },[]);
+    if(isLoading){
+        return  <CircularProgress size={'1rem'} sx={{ color: 'rgb(203 213 225)' }}/>
+    }
 
     return(
         <DashboardLayout title="Invoice">
@@ -82,12 +53,12 @@ export const InvoicePageComponent = () : JSX.Element => {
                         <div className="w-full md:w-1/2 flex flex-row items-center gap-2">
                             <p className="font-semibold">Reference No</p>
                             <div className="h-px bg-black w-16"/>
-                            <span>{data?.data?.job?.jobTagId}</span>
+                            <span>{data?.data?.data?.job?.jobTagId}</span>
                         </div>
                         <div className="w-full md:w-1/2 flex flex-row items-center gap-2">
                             <p className="font-semibold">Date</p>
                             <div className="h-px bg-black w-16"/>
-                            <span>{new Date(data?.data?.job?.dateCreated).toDateString()}</span>
+                            <span>{new Date(data?.data?.data?.job?.dateCreated).toDateString()}</span>
                         </div>
                     </div>
 
@@ -96,30 +67,30 @@ export const InvoicePageComponent = () : JSX.Element => {
                         <div className="flex justify-between items-center gap-1">
                             <p className="font-semibold">Business&nbsp;Name&nbsp;Registration</p>
                             {/* <div className="h-px bg-black w-16"/> */}
-                            <span>#{data?.data?.price}</span>
+                            <span>#{data?.data?.data?.price}</span>
                         </div>
                         <div className="flex justify-between items-center gap-1">
                             <p className="font-semibold">Suggested&nbsp;Name&nbsp;1</p>
                             {/* <div className="h-px bg-black w-16"/> */}
-                            <span className="capitalize">{data?.data?.job?.businessNameRegistration?.firstNameSuggestion}</span>
+                            <span className="capitalize">{data?.data?.data?.job?.businessNameRegistration?.firstNameSuggestion}</span>
                         </div>
                         <div className="flex justify-between items-center gap-1">
                             <p className="font-semibold">Suggested&nbsp;Name&nbsp;2</p>
                             {/* <div className="h-px bg-black w-16"/> */}
-                            <span className="capitalize">{data?.data?.job?.businessNameRegistration?.secondNameSuggestion}</span>
+                            <span className="capitalize">{data?.data?.data?.job?.businessNameRegistration?.secondNameSuggestion}</span>
                         </div>
 
                         <div className="flex justify-between items-center gap-2">
                             <p className="font-semibold">No&nbsp;Of&nbsp;Proprietors</p>
                             {/* <div className="h-px bg-black w-16"/> */}
-                            <span>{data?.data?.job?.businessNameRegistration?.registeredPartnersForThsBusiness?.length}</span>
+                            <span>{data?.data?.data?.job?.businessNameRegistration?.registeredPartnersForThsBusiness?.length}</span>
                         </div>
 
                         <div className="flex justify-between items-center gap-2">
                             <p className="font-semibold">Business&nbsp;Type&nbsp;</p>
                             {/* <div className="h-px bg-black w-16"/> */}
                             <span className="capitalize">
-                                {data?.data?.job?.jobType === "BUSINESS_NAME_REGISTRATION" ? "Business Name Reg" : data?.data?.job?.jobType}
+                                {data?.data?.data?.job?.jobType === "BUSINESS_NAME_REGISTRATION" ? "Business Name Reg" : data?.data?.job?.jobType}
                             </span>
                         </div>
                     </div>
@@ -128,12 +99,12 @@ export const InvoicePageComponent = () : JSX.Element => {
                     <div className="flex flex-col my-16 gap-2 text-black text-lg w-full lg:w-4/5">
                         <div className="flex justify-between items-center gap-1">
                             <p className="font-semibold">Convenience&nbsp;Fees</p>
-                            <span>#{data?.data?.price}</span>
+                            <span>#{data?.data?.data?.price}</span>
                         </div>
                         <div className="flex justify-between items-center gap-1">
                             <p className="font-semibold">Value&nbsp;Added&nbsp;Tax&nbsp;(VAT)&nbsp;@7.5%</p>
                             {/* <div className="h-px bg-black w-16"/> */}
-                            <span>#{data?.data?.vat}</span>
+                            <span>#{data?.data?.data?.vat}</span>
                         </div>
                     </div>
 
@@ -142,7 +113,7 @@ export const InvoicePageComponent = () : JSX.Element => {
                         <div className="flex justify-between items-center gap-1 font-bold">
                             <p className="">TOTAL</p>
                             <div className="h-px bg-black w-16"/>
-                            <span>#{data?.data?.totalPrice}</span>
+                            <span>#{data?.data?.data?.totalPrice}</span>
                         </div>
                     </div>
                     {/* NOTE */}
@@ -150,7 +121,7 @@ export const InvoicePageComponent = () : JSX.Element => {
                         <i>NOTE
                             Kindly note that where the Corporate Affairs Commission (CAC)
                             rejects your suggested names, you will be required to suggest
-                            new names and pay a name reservation fee of _#{data?.data?.price}
+                            new names and pay a name reservation fee of _#{data?.data?.data?.price}
                         </i>
                     </div>
                     {/* Make Payment Button */}
